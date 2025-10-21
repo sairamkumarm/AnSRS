@@ -6,10 +6,11 @@ public class Problem {
     private int problemId;
     private String problemName;
     private String problemLink;
-    public enum Pool{H, M, L};
     private Pool problemPool;
     private LocalDate lastRecall;
     private int totalRecalls;
+
+    public enum Pool{H, M, L};
 
     public Problem() {
     }
