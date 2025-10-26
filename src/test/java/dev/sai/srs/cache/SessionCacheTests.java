@@ -1,4 +1,4 @@
-package cache;
+package dev.sai.srs.cache;
 
 
 import org.junit.jupiter.api.AfterEach;
@@ -10,9 +10,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class SessionCacheTests {
     private static final String baseDir = System.getenv("APPDATA");
@@ -50,8 +49,8 @@ public class SessionCacheTests {
         Assertions.assertNotNull(testSessionCache.getCacheDate());
         Assertions.assertEquals(LocalDate.now(), testSessionCache.getCacheDate());
         //check zero problems
-        Assertions.assertEquals(0, testSessionCache.getProblemIds().size());
-        Set<Integer> problems = new HashSet<>();
+        Assertions.assertEquals(0, testSessionCache.getProblemIdList().size());
+        List<Integer> problems = new ArrayList<>();
         try{
             List<String> lines = Files.readAllLines(sessionCacheTestPath);
             if(lines.size() <2) throw new RuntimeException("Cache File Contents Malformed");
@@ -67,7 +66,7 @@ public class SessionCacheTests {
     }
 
     boolean isCacheFileObjectEqual(){
-        Set<Integer> problems = new HashSet<>();
+        List<Integer> problems = new ArrayList<>();
         try{
             List<String> lines = Files.readAllLines(sessionCacheTestPath);
             if(!testSessionCache.getCacheDate().equals(LocalDate.parse(lines.getFirst()))) return false;
@@ -76,8 +75,8 @@ public class SessionCacheTests {
                 String line = lines.get(i).trim();
                 if(!line.isEmpty()) problems.add(Integer.parseInt(line));
             }
-            if(testSessionCache.getProblemIds().size() != Integer.parseInt(lines.get(1).trim())) return false;
-            if(!testSessionCache.getProblemIds().equals(problems)) return false;
+            if(testSessionCache.getProblemIdList().size() != Integer.parseInt(lines.get(1).trim())) return false;
+            if(!testSessionCache.getProblemIdList().equals(problems)) return false;
         } catch (IOException e){
             throw new RuntimeException("Error loading cache");
         }
@@ -86,14 +85,14 @@ public class SessionCacheTests {
 
     @Test
     void cacheReloadTest(){
-        testSessionCache.fillCache(new HashSet<>(Set.of(12,23,34)));
+        testSessionCache.fillCache(List.of(12,23,34));
         testSessionCache.reloadCache();
         Assertions.assertTrue(isCacheFileObjectEqual());
     }
 
     @Test
     void cacheOperationsTest(){
-        testSessionCache.fillCache(new HashSet<>(Set.of(12,23,34)));
+        testSessionCache.fillCache(List.of(12,23,34));
         testSessionCache.reloadCache();
         Assertions.assertTrue(isCacheFileObjectEqual());
         Assertions.assertTrue(testSessionCache.removeProblem((Integer) 12));

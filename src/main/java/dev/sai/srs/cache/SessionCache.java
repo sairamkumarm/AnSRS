@@ -1,4 +1,4 @@
-package cache;
+package dev.sai.srs.cache;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -51,8 +51,8 @@ public class SessionCache implements Cache {
         }
     }
 
-    public void fillCache(Set<Integer> problems){
-        problemIds = problems;
+    public void fillCache(List<Integer> problems){
+        problemIds = new HashSet<>(problems);
     }
 
     public boolean removeProblem(Integer problemId) {
@@ -87,9 +87,11 @@ public class SessionCache implements Cache {
         return cacheDate;
     }
 
-    public Set<Integer> getProblemIds() {
-        return problemIds;
+    public List<Integer> getProblemIdList() {
+        return problemIds.stream().toList();
     }
+
+    public Set<Integer> getProblemIdSet() {return problemIds;}
 
     public void setCacheDate(LocalDate cacheDate) {
         this.cacheDate = cacheDate;

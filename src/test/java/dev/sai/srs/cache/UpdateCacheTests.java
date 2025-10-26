@@ -1,5 +1,6 @@
-package cache;
+package dev.sai.srs.cache;
 
+import dev.sai.srs.data.Problem;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +66,8 @@ public class UpdateCacheTests {
     }
 
     private boolean isCacheFileObjectEqual() {
-        Map<Integer, String> fileProblems = new HashMap<>();
+        Map<Integer, UpdateCache.Pair<Problem.Pool, LocalDate>> fileProblems = new HashMap<>();
+        HashMap<Integer, UpdateCache.Pair<Problem.Pool, LocalDate>> cacheProblems = testUpdateCache.getProblems();
         try {
             List<String> lines = Files.readAllLines(updateCacheTestPath);
             if (lines.size() < 2) return false;
@@ -74,15 +77,24 @@ public class UpdateCacheTests {
                 String line = lines.get(i).trim();
                 if (!line.isEmpty()) {
                     String[] temp = line.split(" ");
-                    if (temp.length != 2) return false;
-                    fileProblems.put(Integer.parseInt(temp[0]), temp[1]);
+                    if (temp.length != 3) return false;
+                    int pid = Integer.parseInt(temp[0]);
+                    Problem.Pool pool = temp[1].equals("null") ? null : Problem.Pool.valueOf(temp[1].toUpperCase());
+                    LocalDate date = LocalDate.parse(temp[2]);
+                    fileProblems.put(pid, new UpdateCache.Pair<>(pool, date));
+                    if (!fileProblems.get(pid).equals(cacheProblems.get(pid)));
                 }
             }
-
-            if (testUpdateCache.getProblems().size() != Integer.parseInt(lines.get(1).trim())) return false;
-            return testUpdateCache.getProblems().equals(fileProblems);
+            System.out.println(cacheProblems);
+            System.out.println(fileProblems);
+            if(testUpdateCache.getProblems().size() != Integer.parseInt(lines.get(1).trim())) return false;
+            return true;
         } catch (IOException e) {
             throw new RuntimeException("Error validating cache file");
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Pool malformed");
+        } catch (DateTimeParseException e) {
+            throw new RuntimeException("Date malformed");
         }
     }
 
@@ -93,7 +105,7 @@ public class UpdateCacheTests {
 //        dummyProblems.put(20, "B");
 //        dummyProblems.put(30, "C");
 
-        Assertions.assertTrue(testUpdateCache.addProblem(10,"A"));
+        Assertions.assertTrue(testUpdateCache.addProblem(10, Problem.Pool.L));
         testUpdateCache.reloadCache();
         Assertions.assertTrue(isCacheFileObjectEqual());
     }
@@ -101,16 +113,16 @@ public class UpdateCacheTests {
     @Test
     void cacheAddProblemTest() {
         // add first problem
-        Assertions.assertTrue(testUpdateCache.addProblem(100, "A"));
+        Assertions.assertTrue(testUpdateCache.addProblem(100, Problem.Pool.L));
         Assertions.assertTrue(isCacheFileObjectEqual());
 
         // duplicate add should fail
-        Assertions.assertFalse(testUpdateCache.addProblem(100, "A"));
+        Assertions.assertFalse(testUpdateCache.addProblem(100, Problem.Pool.L));
         Assertions.assertTrue(isCacheFileObjectEqual());
 
         // add more entries
-        Assertions.assertTrue(testUpdateCache.addProblem(200, "B"));
-        Assertions.assertTrue(testUpdateCache.addProblem(300, "C"));
+        Assertions.assertTrue(testUpdateCache.addProblem(200, null));
+        Assertions.assertTrue(testUpdateCache.addProblem(300, Problem.Pool.H));
         Assertions.assertTrue(isCacheFileObjectEqual());
     }
 

@@ -19,7 +19,7 @@ target/
 .project
 .settings
 .springBeans
-.sts4-cache
+.sts4-dev.cache
 
 ### NetBeans ###
 /nbproject/private/
