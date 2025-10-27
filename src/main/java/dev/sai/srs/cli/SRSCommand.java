@@ -41,8 +41,8 @@ public class SRSCommand implements Runnable{
         // DONE: problem complete (with/without updating poll),
         // DONE: problem add to db, to introduce new problems
         // DONE: queue discard with flag,
-        // TODO commit (with/without flag) also delete session
-        // TODO: add feature to complete whole session
+        // DONE: commit (with/without flag) also delete session
+        // TODO: add feature to complete whole session and clear db too
         //  DONE: think about completion dates vs updateCache date, cause sometimes updatecache is older than actual problems and could result in lastrecall going back in time
         if(debug) Printer.statePrinter(sessionCache,updateCache,db);
     }

@@ -1,10 +1,7 @@
 package dev.sai.srs.cli;
 
-import dev.sai.srs.data.Problem;
 import dev.sai.srs.printer.Printer;
 import picocli.CommandLine;
-
-import java.util.Optional;
 
 @CommandLine.Command(name = "delete", description = "delete lets you remove from session queue, completed queue and db, depending on the flags, by default it removes from session queue")
 public class DeleteCommand implements Runnable {

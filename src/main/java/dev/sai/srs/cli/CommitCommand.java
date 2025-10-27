@@ -7,7 +7,6 @@ import picocli.CommandLine;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @CommandLine.Command(name = "commit", description = "commit - lets you commit completed problems in session to the database")

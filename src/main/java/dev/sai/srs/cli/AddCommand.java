@@ -48,7 +48,7 @@ public class AddCommand implements Runnable {
             System.err.println("Invalid pool value, pick between H, M and L");
             return;
         }
-        Problem problem = new Problem(problemId, problemName, problemLink, poolEnum, LocalDate.now(), 1);
+        Problem problem = new Problem(problemId, problemName, problemLink, poolEnum, LocalDate.now(), 0);
         try {
             if (!parent.db.insertProblem(problem)) {
                 if (update) {
