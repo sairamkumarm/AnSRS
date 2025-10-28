@@ -14,17 +14,17 @@ public class DeleteCommand implements Runnable {
     @CommandLine.Parameters(index = "0", paramLabel = "PROBLEM_ID", description = "Problem Id")
     private int problemId;
 
-    @CommandLine.Option(names = {"-c", "--completed"}, description = "Lets you remove from problems that are completed but are commited to the database yet.")
+    @CommandLine.Option(names = {"-c", "--completed"}, description = "Removes from problems that are completed but, are yet to be commited to the database.")
     private boolean deleteFromUpdateCache;
 
-    @CommandLine.Option(names = {"-d", "--database"}, description = "Lets you remove a problem from the database and all other caches")
+    @CommandLine.Option(names = {"-d", "--database"}, description = "Removes a problem from the database and caches")
     private boolean deleteFromDatabase;
 
-    @CommandLine.Option(names = "--sure", description = "just a fallback to prevent accidental deletions", required = true)
+    @CommandLine.Option(names = "--sure", description = "A defensive fallback to prevent accidental deletions", required = true)
     private boolean sure;
 
-    @CommandLine.Option(names = "--debug", description = "Prints cache and db state", required = false)
-    private boolean debug;
+    @CommandLine.Option(names = {"-r", "--reset"}, description = "Hard resets all the persistent data, cache included")
+    private boolean reset;
 
     @Override
     public void run() {
@@ -42,7 +42,6 @@ public class DeleteCommand implements Runnable {
                 return;
             }
             System.out.println("Problem deleted from database");
-            if (debug) Printer.statePrinter(parent.sessionCache, parent.updateCache, parent.db);
         }
         if (deleteFromUpdateCache) {
             if (!parent.updateCache.removeProblem(problemId)) {
@@ -57,7 +56,8 @@ public class DeleteCommand implements Runnable {
         } else {
             System.out.println("Problem deleted from session");
         }
-        if (debug) Printer.statePrinter(parent.sessionCache, parent.updateCache, parent.db);
+
+        if (parent.debug) Printer.statePrinter(parent.sessionCache, parent.updateCache, parent.db);
 
     }
 

@@ -30,9 +30,6 @@ public class AddCommand implements Runnable {
     @CommandLine.Option(names = {"-u", "--update"}, description = "To be used while updating an existing problem", required = false)
     private boolean update;
 
-    @CommandLine.Option(names = "--debug", description = "Prints cache and db state", required = false)
-    private boolean debug;
-
     @Override
     public void run() {
         //Todo: split into validation and logic functions, use try-catch-finally for debug log printing
@@ -66,6 +63,6 @@ public class AddCommand implements Runnable {
             System.err.println(e.getMessage());
             return;
         }
-        if (debug) Printer.statePrinter(parent.sessionCache, parent.updateCache, parent.db);
+        if (parent.debug) Printer.statePrinter(parent.sessionCache, parent.updateCache, parent.db);
     }
 }

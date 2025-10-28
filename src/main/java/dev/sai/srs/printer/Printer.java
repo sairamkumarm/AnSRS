@@ -9,28 +9,117 @@ import java.util.List;
 import java.util.Optional;
 
 public class Printer {
+
+    // Box drawing characters
+    private static final String TOP_LEFT = "╔";
+    private static final String TOP_RIGHT = "╗";
+    private static final String BOTTOM_LEFT = "╚";
+    private static final String BOTTOM_RIGHT = "╝";
+    private static final String HORIZONTAL = "═";
+    private static final String VERTICAL = "║";
+    private static final String T_DOWN = "╦";
+    private static final String T_UP = "╩";
+    private static final String T_RIGHT = "╠";
+    private static final String T_LEFT = "╣";
+    private static final String CROSS = "╬";
+
+    private static final int ID_WIDTH = 10;
+    private static final int NAME_WIDTH = 25;
+    private static final int LINK_WIDTH = 60;
+    private static final int POOL_WIDTH = 8;
+    private static final int RECALL_WIDTH = 12;
+    private static final int RECALLS_WIDTH = 12;
+
     public static void printProblemsGrid(List<Problem> problems) {
         if (problems == null || problems.isEmpty()) {
-            System.out.println("No problems to display");
+            System.out.println("╭───────────────────────────╮");
+            System.out.println("│  No problems to display  │");
+            System.out.println("╰───────────────────────────╯");
             return;
         }
 
-        String format = "| %-10s | %-25s | %-60s | %-8s | %-12s | %-12s |%n";
-
-        System.out.format(format, "ID", "Name", "Link", "Pool", "Last Recall", "Recalls");
-        System.out.println(new String(new char[150]).replace("\0", "-"));
+        printTopBorder();
+        printHeader();
+        printMiddleBorder();
 
         for (Problem p : problems) {
-            System.out.format(
-                    format,
-                    p.getProblemId(),
-                    truncate(p.getProblemName(), 25),
-                    p.getProblemLink(),  // no truncate here
-                    p.getProblemPool(),
-                    p.getLastRecall(),
-                    p.getTotalRecalls()
-            );
+            printProblemRow(p);
         }
+
+        printBottomBorder();
+        System.out.println("Total: " + problems.size() + " problem(s)");
+    }
+
+    private static void printTopBorder() {
+        System.out.print(TOP_LEFT);
+        System.out.print(HORIZONTAL.repeat(ID_WIDTH + 2));
+        System.out.print(T_DOWN);
+        System.out.print(HORIZONTAL.repeat(NAME_WIDTH + 2));
+        System.out.print(T_DOWN);
+        System.out.print(HORIZONTAL.repeat(LINK_WIDTH + 2));
+        System.out.print(T_DOWN);
+        System.out.print(HORIZONTAL.repeat(POOL_WIDTH + 2));
+        System.out.print(T_DOWN);
+        System.out.print(HORIZONTAL.repeat(RECALL_WIDTH + 2));
+        System.out.print(T_DOWN);
+        System.out.print(HORIZONTAL.repeat(RECALLS_WIDTH + 2));
+        System.out.println(TOP_RIGHT);
+    }
+
+    private static void printMiddleBorder() {
+        System.out.print(T_RIGHT);
+        System.out.print(HORIZONTAL.repeat(ID_WIDTH + 2));
+        System.out.print(CROSS);
+        System.out.print(HORIZONTAL.repeat(NAME_WIDTH + 2));
+        System.out.print(CROSS);
+        System.out.print(HORIZONTAL.repeat(LINK_WIDTH + 2));
+        System.out.print(CROSS);
+        System.out.print(HORIZONTAL.repeat(POOL_WIDTH + 2));
+        System.out.print(CROSS);
+        System.out.print(HORIZONTAL.repeat(RECALL_WIDTH + 2));
+        System.out.print(CROSS);
+        System.out.print(HORIZONTAL.repeat(RECALLS_WIDTH + 2));
+        System.out.println(T_LEFT);
+    }
+
+    private static void printBottomBorder() {
+        System.out.print(BOTTOM_LEFT);
+        System.out.print(HORIZONTAL.repeat(ID_WIDTH + 2));
+        System.out.print(T_UP);
+        System.out.print(HORIZONTAL.repeat(NAME_WIDTH + 2));
+        System.out.print(T_UP);
+        System.out.print(HORIZONTAL.repeat(LINK_WIDTH + 2));
+        System.out.print(T_UP);
+        System.out.print(HORIZONTAL.repeat(POOL_WIDTH + 2));
+        System.out.print(T_UP);
+        System.out.print(HORIZONTAL.repeat(RECALL_WIDTH + 2));
+        System.out.print(T_UP);
+        System.out.print(HORIZONTAL.repeat(RECALLS_WIDTH + 2));
+        System.out.println(BOTTOM_RIGHT);
+    }
+
+    private static void printHeader() {
+        System.out.printf("%s %-10s %s %-25s %s %-60s %s %-8s %s %-12s %s %-12s %s%n",
+                VERTICAL, "ID", VERTICAL, "Name", VERTICAL, "Link",
+                VERTICAL, "Pool", VERTICAL, "Last Recall", VERTICAL, "Recalls", VERTICAL);
+    }
+
+    private static void printProblemRow(Problem p) {
+        System.out.printf("%s %-10s %s %-25s %s %-60s %s %-8s %s %-12s %s %-12s %s%n",
+                VERTICAL,
+                p.getProblemId(),
+                VERTICAL,
+                truncate(p.getProblemName(), NAME_WIDTH),
+                VERTICAL,
+                truncate(p.getProblemLink(), LINK_WIDTH),
+                VERTICAL,
+                p.getProblemPool(),
+                VERTICAL,
+                p.getLastRecall(),
+                VERTICAL,
+                p.getTotalRecalls(),
+                VERTICAL
+        );
     }
 
     private static String truncate(String s, int maxLength) {
@@ -38,17 +127,27 @@ public class Printer {
         return s.length() <= maxLength ? s : s.substring(0, maxLength - 3) + "...";
     }
 
+    public static void statePrinter(SessionCache sessionCache, UpdateCache updateCache, DuckDBManager duckDBManager) {
+        System.out.println("\n╔══════════════════════════════════════════════════════════════╗");
+        System.out.println("║                       SYSTEM STATUS                          ║");
+        System.out.println("╠══════════════════════════════════════════════════════════════╣");
 
-    public static void statePrinter(SessionCache sessionCache, UpdateCache updateCache, DuckDBManager duckDBManager){
-        System.out.println("---------STATUS----------");
-        System.out.println("Session Cache state: "+sessionCache.getProblemIdSet());
-        System.out.println("Update Cache state: "+updateCache.getProblems());
-        System.out.println("Database state");
+        System.out.println("║    Session Cache:                                            ║");
+        System.out.printf("║    %s%-58s║%n", "", sessionCache.getProblemIdSet());
+        System.out.println("╟──────────────────────────────────────────────────────────────╢");
+
+        System.out.println("║    Update Cache:                                             ║");
+        System.out.printf("║    %s%-58s║%n", "", updateCache.getProblems());
+        System.out.println("╚══════════════════════════════════════════════════════════════╝");
+        System.out.println();
+
         Optional<List<Problem>> problemsList = duckDBManager.getAllProblems();
-        if (problemsList.isPresent()){
+        if (problemsList.isPresent()) {
             printProblemsGrid(problemsList.get());
         } else {
-            System.out.println("Db empty");
+            System.out.println("╭───────────────────────╮");
+            System.out.println("│  Database is empty   │");
+            System.out.println("╰───────────────────────╯");
         }
     }
 }

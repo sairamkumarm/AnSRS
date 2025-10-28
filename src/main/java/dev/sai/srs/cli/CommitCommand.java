@@ -2,6 +2,7 @@ package dev.sai.srs.cli;
 
 import dev.sai.srs.cache.UpdateCache;
 import dev.sai.srs.data.Problem;
+import dev.sai.srs.printer.Printer;
 import picocli.CommandLine;
 
 import java.time.LocalDate;
@@ -37,11 +38,11 @@ public class CommitCommand implements Runnable{
         System.out.println(dbProblems);
         for (Problem problem: dbProblems){
             UpdateCache.Pair<Problem.Pool, LocalDate> poolLocalDatePair = updatedCacheProblems.get(problem.getProblemId());
-            Problem.Pool pool = poolLocalDatePair.getFirst();
+            Problem.Pool pool = poolLocalDatePair.getPool();
             if (pool!=null){
                 problem.setProblemPool(pool);
             }
-            problem.setLastRecall(poolLocalDatePair.getSecond());
+            problem.setLastRecall(poolLocalDatePair.getLast_recall());
             problem.setTotalRecalls(problem.getTotalRecalls()+1);
             parent.updateCache.removeProblem(problem.getProblemId());
         }
@@ -51,5 +52,6 @@ public class CommitCommand implements Runnable{
             return;
         }
         System.out.println("Commit success: "+dbProblems.size()+" problems updated");
+        if (parent.debug) Printer.statePrinter(parent.sessionCache, parent.updateCache, parent.db);
     }
 }

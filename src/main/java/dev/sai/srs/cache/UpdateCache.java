@@ -74,10 +74,10 @@ public class UpdateCache implements Cache {
             writer.write(String.valueOf(problems.size()));
             writer.newLine();
             for (Map.Entry<Integer, Pair<Problem.Pool, LocalDate>> e : problems.entrySet()) {
-                if (e.getValue()==null || e.getValue().getSecond()==null) throw new RuntimeException("UpdateCache Object Malformed");
+                if (e.getValue()==null || e.getValue().getLast_recall()==null) throw new RuntimeException("UpdateCache Object Malformed");
                 String pid = String.valueOf(e.getKey());
-                String pool = (e.getValue().getFirst()==null) ? "null" :e.getValue().getFirst().name();
-                String date = e.getValue().getSecond().toString();
+                String pool = (e.getValue().getPool()==null) ? "null" :e.getValue().getPool().name();
+                String date = e.getValue().getLast_recall().toString();
                 writer.write(pid + " " + pool + " " + date);
                 writer.newLine();
             }
@@ -130,27 +130,27 @@ public class UpdateCache implements Cache {
     }
 
     public static class Pair<T,V>{
-        private final T first;
-        private final V second;
+        private final T pool;
+        private final V last_recall;
 
-        public Pair(T first, V second) {
-            this.first = first;
-            this.second = second;
+        public Pair(T pool, V last_recall) {
+            this.pool = pool;
+            this.last_recall = last_recall;
         }
 
-        public T getFirst() {
-            return first;
+        public T getPool() {
+            return pool;
         }
 
-        public V getSecond() {
-            return second;
+        public V getLast_recall() {
+            return last_recall;
         }
 
         @Override
         public String toString() {
             return "Pair{" +
-                    "first=" + first +
-                    ", second=" + second +
+                    "pool=" + pool +
+                    ", last_recall=" + last_recall +
                     '}';
         }
     }

@@ -26,7 +26,7 @@ public class SRSCommand implements Runnable{
     }
 
     @CommandLine.Option(names = {"-d", "--debug"}, description = "Prints cache and db state", required = false)
-    private boolean debug;
+    public boolean debug;
 
     @Override
     public void run() {
@@ -36,13 +36,11 @@ public class SRSCommand implements Runnable{
         } else{
             System.out.println("No problems found in cache");
         }
-        //TODO: problems gen(with/without overwrite),
-        // DONE: problem complete (with/without updating poll),
-        // DONE: problem add to db, to introduce new problems
-        // DONE: queue discard with flag,
-        // DONE: commit (with/without flag) also delete session
-        // TODO: add feature to complete whole session and clear db too
-        //  DONE: think about completion dates vs updateCache date, cause sometimes updatecache is older than actual problems and could result in lastrecall going back in time
+        // TODO: add feature to complete whole session
+        // TODO: add feature to load from csv
+        // TODO: add verbose mode, with more text
+        // TODO: implement separate validation and throw parameter exceptions
+        // TODO: make welcome screen with state print on root command
         if(debug) Printer.statePrinter(sessionCache,updateCache,db);
     }
 }

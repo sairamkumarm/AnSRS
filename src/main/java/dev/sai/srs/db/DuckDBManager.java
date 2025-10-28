@@ -204,6 +204,15 @@ public class DuckDBManager implements AutoCloseable {
         }
     }
 
+    public boolean clearDatabase(){
+        try(PreparedStatement statement = connection.prepareStatement("TRUNCATE TABLE problems")) {
+            statement.execute();
+            return true;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
     @Override
     public void close() throws Exception {
         connection.close();
