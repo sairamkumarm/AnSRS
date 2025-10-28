@@ -3,13 +3,15 @@ package dev.sai.srs.cli;
 import dev.sai.srs.printer.Printer;
 import picocli.CommandLine;
 
-@CommandLine.Command(name = "delete", description = "delete lets you remove from session queue, completed queue and db, depending on the flags, by default it removes from session queue")
+@CommandLine.Command(name = "delete",
+        description = "delete lets you remove from session queue, completed queue and db, depending on the flags, by default it removes from session queue",
+        mixinStandardHelpOptions = true)
 public class DeleteCommand implements Runnable {
 
     @CommandLine.ParentCommand
     private SRSCommand parent;
 
-    @CommandLine.Parameters(index = "0", paramLabel = "ProblemID", description = "Problem Id")
+    @CommandLine.Parameters(index = "0", paramLabel = "PROBLEM_ID", description = "Problem Id")
     private int problemId;
 
     @CommandLine.Option(names = {"-c", "--completed"}, description = "Lets you remove from problems that are completed but are commited to the database yet.")

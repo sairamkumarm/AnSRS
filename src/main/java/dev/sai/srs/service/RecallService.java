@@ -47,7 +47,7 @@ public class RecallService {
 
     public List<Integer> recall(int x){
         List<Integer> res = new ArrayList<>();
-        while (x-->0) res.add(Objects.requireNonNull(problemQueue.poll()).getProblemId());
+        while (x-->0 && !problemQueue.isEmpty()) res.add(problemQueue.poll().getProblemId());
         return res;
     }
 

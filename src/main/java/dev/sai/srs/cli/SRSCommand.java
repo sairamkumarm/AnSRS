@@ -13,8 +13,7 @@ import java.util.Optional;
 @CommandLine.Command(name = "srs",
         description = "Spaced Repetition System recall practice.",
         mixinStandardHelpOptions = true,
-        showAtFileInUsageHelp = true,
-        subcommands = {CompleteCommand.class, AddCommand.class, DeleteCommand.class, CommitCommand.class})
+        subcommands = {CompleteCommand.class, AddCommand.class, DeleteCommand.class, CommitCommand.class, RecallCommand.class})
 public class SRSCommand implements Runnable{
     public final SessionCache sessionCache;
     public final UpdateCache updateCache;

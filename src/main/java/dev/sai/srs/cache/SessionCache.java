@@ -52,7 +52,13 @@ public class SessionCache implements Cache {
     }
 
     public void fillCache(List<Integer> problems){
-        problemIds = new HashSet<>(problems);
+        problemIds.addAll(problems);
+        reloadCache();
+    }
+
+    public void fillCache(Set<Integer> problems){
+        problemIds.addAll(problems);
+        reloadCache();
     }
 
     public boolean removeProblem(Integer problemId) {

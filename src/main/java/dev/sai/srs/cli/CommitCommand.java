@@ -9,7 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-@CommandLine.Command(name = "commit", description = "commit - lets you commit completed problems in session to the database")
+@CommandLine.Command(name = "commit",
+        description = "commit - lets you commit completed problems in session to the database",
+        mixinStandardHelpOptions = true)
 public class CommitCommand implements Runnable{
 
     @CommandLine.ParentCommand

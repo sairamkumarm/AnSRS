@@ -72,7 +72,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.6.2</version>
                 <configuration>
-                    <mainClass>dev.sai.srs.Main</mainClass>
+                    <mainClass>dev.sai.srs.srs</mainClass>
                 </configuration>
             </plugin>
             <plugin>
