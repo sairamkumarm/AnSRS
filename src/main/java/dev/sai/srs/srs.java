@@ -5,12 +5,11 @@ import dev.sai.srs.cache.UpdateCache;
 import dev.sai.srs.cli.SRSCommand;
 import dev.sai.srs.db.DuckDBManager;
 import picocli.CommandLine;
-
+import picocli.CommandLine.Help.*;
+import picocli.CommandLine.Help.Ansi.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Set;
 
 public class srs {
 
@@ -36,13 +35,16 @@ public class srs {
             SessionCache sessionCache = new SessionCache(sessionCachePath);
             UpdateCache updateCache = new UpdateCache(updateCachePath);
             DuckDBManager db = new DuckDBManager(databasePath);
-
-//            System.out.println(dev.sai.srs.db.getProblemsFromList(List.of(1,11)));
-//            dev.sai.srs.db.insertProblem(new Problem(1,"234", "sdfgsdf", Problem.Pool.L, LocalDate.now(), 1));
-//            sessionCache.fillCache(List.of(1,11,13));
+            ColorScheme colorScheme = new ColorScheme.Builder()
+                    .commands    (Style.bold, Style.underline)    // combine multiple styles
+                    .options     (Style.fg_yellow)                // yellow foreground color
+                    .parameters  (Style.fg_yellow)
+                    .optionParams(Style.italic)
+                    .errors      (Style.fg_red, Style.bold)
+                    .stackTraces (Style.italic)
+                    .build();
             SRSCommand root = new SRSCommand(sessionCache, updateCache, db);
-            int exitCode = new CommandLine(root).execute(args);
-            //TODO: implement proper dev.sai.srs.exception handling, and graceful failing
+            int exitCode = new CommandLine(root).setColorScheme(colorScheme).execute(args);
             db.close();
             System.exit(exitCode);
         } catch (IOException e) {

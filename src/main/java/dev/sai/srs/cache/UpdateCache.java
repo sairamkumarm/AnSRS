@@ -96,12 +96,31 @@ public class UpdateCache implements Cache {
         }
     }
 
+    public boolean addProblem(Integer problemId, Problem.Pool pool, LocalDate date) {
+        if (problems.containsKey(problemId)) {
+            return false;
+        } else {
+            problems.put(problemId, new Pair<>(pool, date));
+            reloadCache();
+            return true;
+        }
+    }
 
     public boolean removeProblem(Integer problemID) {
         if (!problems.containsKey(problemID)) return false;
         problems.remove(problemID);
         reloadCache();
         return true;
+    }
+
+    public boolean containsProblem(Integer problemID){
+        return problems.containsKey(problemID);
+    }
+
+    public boolean clearCache(){
+        problems.clear();
+        reloadCache();
+        return problems.isEmpty();
     }
 
     public Path getCachePath() {

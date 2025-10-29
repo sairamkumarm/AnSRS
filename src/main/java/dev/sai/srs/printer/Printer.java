@@ -23,18 +23,18 @@ public class Printer {
     private static final String T_LEFT = "╣";
     private static final String CROSS = "╬";
 
-    private static final int ID_WIDTH = 10;
+    private static final int ID_WIDTH = 6;
     private static final int NAME_WIDTH = 25;
     private static final int LINK_WIDTH = 60;
-    private static final int POOL_WIDTH = 8;
-    private static final int RECALL_WIDTH = 12;
-    private static final int RECALLS_WIDTH = 12;
+    private static final int POOL_WIDTH = 4;
+    private static final int RECALL_WIDTH = 11;
+    private static final int RECALLS_WIDTH = 7;
 
     public static void printProblemsGrid(List<Problem> problems) {
         if (problems == null || problems.isEmpty()) {
-            System.out.println("╭───────────────────────────╮");
+            System.out.println("╭──────────────────────────╮");
             System.out.println("│  No problems to display  │");
-            System.out.println("╰───────────────────────────╯");
+            System.out.println("╰──────────────────────────╯");
             return;
         }
 
@@ -99,13 +99,13 @@ public class Printer {
     }
 
     private static void printHeader() {
-        System.out.printf("%s %-10s %s %-25s %s %-60s %s %-8s %s %-12s %s %-12s %s%n",
+        System.out.printf("%s %-6s %s %-25s %s %-60s %s %-4s %s %-11s %s %-7s %s%n",
                 VERTICAL, "ID", VERTICAL, "Name", VERTICAL, "Link",
                 VERTICAL, "Pool", VERTICAL, "Last Recall", VERTICAL, "Recalls", VERTICAL);
     }
 
     private static void printProblemRow(Problem p) {
-        System.out.printf("%s %-10s %s %-25s %s %-60s %s %-8s %s %-12s %s %-12s %s%n",
+        System.out.printf("%s %-6s %s %-25s %s %-60s %s %-4s %s %-11s %s %-7s %s%n",
                 VERTICAL,
                 p.getProblemId(),
                 VERTICAL,
@@ -128,18 +128,11 @@ public class Printer {
     }
 
     public static void statePrinter(SessionCache sessionCache, UpdateCache updateCache, DuckDBManager duckDBManager) {
-        System.out.println("\n╔══════════════════════════════════════════════════════════════╗");
-        System.out.println("║                       SYSTEM STATUS                          ║");
-        System.out.println("╠══════════════════════════════════════════════════════════════╣");
+        System.out.println("╭────────────SYSTEM STATUS─────────────╮");
 
-        System.out.println("║    Session Cache:                                            ║");
-        System.out.printf("║    %s%-58s║%n", "", sessionCache.getProblemIdSet());
-        System.out.println("╟──────────────────────────────────────────────────────────────╢");
+        System.out.println("Session Cache: "+sessionCache.getProblemIdSet());
 
-        System.out.println("║    Update Cache:                                             ║");
-        System.out.printf("║    %s%-58s║%n", "", updateCache.getProblems());
-        System.out.println("╚══════════════════════════════════════════════════════════════╝");
-        System.out.println();
+        System.out.println("Update Cache: "+updateCache.getProblems());
 
         Optional<List<Problem>> problemsList = duckDBManager.getAllProblems();
         if (problemsList.isPresent()) {

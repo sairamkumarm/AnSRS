@@ -56,9 +56,22 @@ public class SessionCache implements Cache {
         reloadCache();
     }
 
-    public void fillCache(Set<Integer> problems){
+    public boolean fillCache(Set<Integer> problems){
         problemIds.addAll(problems);
         reloadCache();
+        return true;
+    }
+
+    public boolean clearCache(){
+        problemIds.clear();
+        reloadCache();
+        return problemIds.isEmpty();
+    }
+
+    public boolean addProblem(Integer problemId){
+        problemIds.add(problemId);
+        reloadCache();
+        return problemIds.contains(problemId);
     }
 
     public boolean removeProblem(Integer problemId) {
@@ -103,6 +116,8 @@ public class SessionCache implements Cache {
         this.cacheDate = cacheDate;
         reloadCache();
     }
+
+
 
     @Override
     public String toString() {

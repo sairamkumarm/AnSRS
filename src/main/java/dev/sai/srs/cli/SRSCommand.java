@@ -13,7 +13,8 @@ import java.util.Optional;
 @CommandLine.Command(name = "srs",
         description = "Spaced Repetition System recall practice.",
         mixinStandardHelpOptions = true,
-        subcommands = {CompleteCommand.class, AddCommand.class, DeleteCommand.class, CommitCommand.class, RecallCommand.class})
+        subcommands = {CompleteCommand.class, AddCommand.class, DeleteCommand.class,
+                CommitCommand.class, RecallCommand.class, RollbackCommand.class})
 public class SRSCommand implements Runnable{
     public final SessionCache sessionCache;
     public final UpdateCache updateCache;
@@ -30,16 +31,8 @@ public class SRSCommand implements Runnable{
 
     @Override
     public void run() {
-        Optional<List<Problem>> op = db.getProblemsFromList(sessionCache.getProblemIdList());
-        if (op.isPresent()){
-            Printer.printProblemsGrid(op.get());
-        } else{
-            System.out.println("No problems found in cache");
-        }
-        // TODO: add feature to complete whole session
         // TODO: add feature to load from csv
         // TODO: add verbose mode, with more text
-        // TODO: implement separate validation and throw parameter exceptions
         // TODO: make welcome screen with state print on root command
         if(debug) Printer.statePrinter(sessionCache,updateCache,db);
     }

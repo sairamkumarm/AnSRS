@@ -3,39 +3,42 @@ package dev.sai.srs.cli;
 import dev.sai.srs.cache.UpdateCache;
 import dev.sai.srs.data.Problem;
 import dev.sai.srs.printer.Printer;
-import picocli.CommandLine;
+import picocli.CommandLine.*;
 
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-@CommandLine.Command(name = "commit",
+@Command(name = "commit",
         description = "commit - lets you commit completed problems in session to the database",
         mixinStandardHelpOptions = true)
 public class CommitCommand implements Runnable{
 
-    @CommandLine.ParentCommand
+    @Spec
+    private Model.CommandSpec spec;
+
+    @ParentCommand
     private SRSCommand parent;
 
-    @CommandLine.Option(names = {"-f","--force"}, description = "allows you to commit when there are pending problems in the session")
+    @Option(names = {"-f","--force"}, description = "allows you to commit when there are pending problems in the session")
     private boolean force;
 
     @Override
     public void run() {
         HashMap<Integer, UpdateCache.Pair<Problem.Pool, LocalDate>> updatedCacheProblems = parent.updateCache.getProblems();
         if(updatedCacheProblems.isEmpty()){
-            System.err.println("Nothing to commit");
-            return;
+            throw new ParameterException(spec.commandLine(),"Nothing to commit");
         }
-        Optional<List<Problem>> dbProblemsOptional = parent.db.getProblemsFromList(updatedCacheProblems.keySet().stream().toList());
-        assert dbProblemsOptional.isPresent();
-        List<Problem> dbProblems = dbProblemsOptional.get();
+        List<Problem> dbProblems = parent.db.getProblemsFromList(
+                updatedCacheProblems.keySet().stream().toList()).
+                orElseThrow(
+                        ()->new ParameterException(spec.commandLine(), "Session problems non-existent in DB")
+                );
         if (!parent.sessionCache.getProblemIdSet().isEmpty() && !force){
-            System.err.println("Problems found in session, use --force to override and commit");
-            return;
+            throw new ParameterException(spec.commandLine(),"Problems found in session, use --force to override and commit");
         }
-        System.out.println(dbProblems);
         for (Problem problem: dbProblems){
             UpdateCache.Pair<Problem.Pool, LocalDate> poolLocalDatePair = updatedCacheProblems.get(problem.getProblemId());
             Problem.Pool pool = poolLocalDatePair.getPool();
@@ -48,7 +51,9 @@ public class CommitCommand implements Runnable{
         }
         System.out.println(dbProblems);
         if (!parent.db.updateProblemsBatch(dbProblems)){
-            System.err.println("Commit Failed");
+            System.err.println("Commit Failed, rolling back");
+            //rollback from cache problems, not db, to preserve the null pools, that signify no change
+            for (Map.Entry<Integer, UpdateCache.Pair<Problem.Pool, LocalDate>> problem: updatedCacheProblems.entrySet()) parent.updateCache.addProblem(problem.getKey(), problem.getValue().getPool(), problem.getValue().getLast_recall());
             return;
         }
         System.out.println("Commit success: "+dbProblems.size()+" problems updated");
