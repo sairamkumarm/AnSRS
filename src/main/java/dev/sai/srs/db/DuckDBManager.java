@@ -1,6 +1,6 @@
 package dev.sai.srs.db;
 
-import dev.sai.srs.data.Problem;
+import dev.sai.srs.data.Item;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,7 +31,7 @@ public class DuckDBManager implements AutoCloseable {
 
     public void initTable() {
         try (PreparedStatement statement = connection.prepareStatement("""
-                CREATE TABLE IF NOT EXISTS problems(
+                CREATE TABLE IF NOT EXISTS items(
                     id INTEGER PRIMARY KEY,
                     name TEXT,
                     link TEXT,
@@ -46,18 +46,18 @@ public class DuckDBManager implements AutoCloseable {
         }
     }
 
-    public boolean insertProblem(Problem problem) {
+    public boolean insertItem(Item item) {
         try (PreparedStatement ps = connection.prepareStatement("""
-                    INSERT INTO problems
+                    INSERT INTO items
                     (id, name, link, pool, last_recall, total_recalls)
                     VALUES (?, ?, ?, ?, ?, ?)
                 """)) {
-            ps.setInt(1, problem.getProblemId());
-            ps.setString(2, problem.getProblemName());
-            ps.setString(3, problem.getProblemLink());
-            ps.setString(4, problem.getProblemPool().name());
-            ps.setString(5, problem.getLastRecall().toString());
-            ps.setInt(6, problem.getTotalRecalls());
+            ps.setInt(1, item.getItemId());
+            ps.setString(2, item.getItemName());
+            ps.setString(3, item.getItemLink());
+            ps.setString(4, item.getItemPool().name());
+            ps.setString(5, item.getLastRecall().toString());
+            ps.setInt(6, item.getTotalRecalls());
             ps.executeUpdate();
             return true;
         } catch (SQLException e) {
@@ -66,20 +66,20 @@ public class DuckDBManager implements AutoCloseable {
     }
 
 
-    public boolean updateProblem(Problem problem) {
+    public boolean updateItem(Item item) {
         try (PreparedStatement ps = connection.prepareStatement(
                 """
-                            INSERT OR REPLACE INTO problems
+                            INSERT OR REPLACE INTO items
                             (id, name, link, pool, last_recall, total_recalls)
                             VALUES (?, ?, ?, ?, ?, ?)
                         """
         )) {
-            ps.setInt(1, problem.getProblemId());
-            ps.setString(2, problem.getProblemName());
-            ps.setString(3, problem.getProblemLink());
-            ps.setString(4, problem.getProblemPool().name());
-            ps.setString(5, problem.getLastRecall().toString());
-            ps.setInt(6, problem.getTotalRecalls());
+            ps.setInt(1, item.getItemId());
+            ps.setString(2, item.getItemName());
+            ps.setString(3, item.getItemLink());
+            ps.setString(4, item.getItemPool().name());
+            ps.setString(5, item.getLastRecall().toString());
+            ps.setInt(6, item.getTotalRecalls());
             ps.executeUpdate();
             return true;
         } catch (SQLException e) {
@@ -87,22 +87,22 @@ public class DuckDBManager implements AutoCloseable {
         }
     }
 
-    public boolean updateProblemsBatch(List<Problem> problems) {
+    public boolean updateItemsBatch(List<Item> items) {
         try (PreparedStatement ps = connection.prepareStatement(
                 """
-                        UPDATE problems
+                        UPDATE items
                         SET name=?, link=?, pool=?, last_recall=?, total_recalls=?
                         WHERE id=?
                         """)
         ) {
             connection.setAutoCommit(false);
-            for (Problem problem: problems){
-                ps.setString(1, problem.getProblemName());
-                ps.setString(2, problem.getProblemLink());
-                ps.setString(3,problem.getProblemPool().name());
-                ps.setString(4,problem.getLastRecall().toString());
-                ps.setInt(5,problem.getTotalRecalls());
-                ps.setInt(6,problem.getProblemId());
+            for (Item item : items){
+                ps.setString(1, item.getItemName());
+                ps.setString(2, item.getItemLink());
+                ps.setString(3, item.getItemPool().name());
+                ps.setString(4, item.getLastRecall().toString());
+                ps.setInt(5, item.getTotalRecalls());
+                ps.setInt(6, item.getItemId());
                 ps.addBatch();
             }
             ps.executeBatch();
@@ -117,16 +117,16 @@ public class DuckDBManager implements AutoCloseable {
     }
 
 
-    public Optional<Problem> getProblemById(int pid) {
+    public Optional<Item> getItemById(int itemId) {
         try (
-                ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM problems WHERE id=" + pid);
+                ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM items WHERE id=" + itemId);
         ) {
             if (rs.next()) {
-                return Optional.of(new Problem(
+                return Optional.of(new Item(
                         rs.getInt("id"),
                         rs.getString("name"),
                         rs.getString("link"),
-                        Problem.Pool.valueOf(rs.getString("pool")),
+                        Item.Pool.valueOf(rs.getString("pool")),
                         rs.getDate("last_recall").toLocalDate(),
                         rs.getInt("total_recalls")
                 ));
@@ -136,55 +136,55 @@ public class DuckDBManager implements AutoCloseable {
         }
     }
 
-    public Optional<List<Problem>> getAllProblems() {
-        List<Problem> problems = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM problems");
+    public Optional<List<Item>> getAllItems() {
+        List<Item> items = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM items");
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                Problem p = new Problem(
+                Item p = new Item(
                         rs.getInt("id"),
                         rs.getString("name"),
                         rs.getString("link"),
-                        Problem.Pool.valueOf(rs.getString("pool")),
+                        Item.Pool.valueOf(rs.getString("pool")),
                         rs.getDate("last_recall").toLocalDate(),
                         rs.getInt("total_recalls")
                 );
-                problems.add(p);
+                items.add(p);
             }
         } catch (SQLException e) {
-            System.err.println("Failed to fetch problems from DuckDB\n" + e);
+            System.err.println("Failed to fetch items from DuckDB\n" + e);
             return Optional.empty();
         }
-        return Optional.of(problems);
+        return Optional.of(items);
     }
 
-    public Optional<List<Problem>> getProblemsFromList(List<Integer> ids) {
+    public Optional<List<Item>> getItemsFromList(List<Integer> ids) {
         if (ids == null || ids.isEmpty()) return Optional.empty();
         String inClause = ids.stream().map(k -> String.valueOf(k)).collect(Collectors.joining(",", "(", ")"));
-        List<Problem> res = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM problems WHERE id IN " + inClause);
+        List<Item> res = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM items WHERE id IN " + inClause);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                Problem p = new Problem(
+                Item p = new Item(
                         rs.getInt("id"),
                         rs.getString("name"),
                         rs.getString("link"),
-                        Problem.Pool.valueOf(rs.getString("pool")),
+                        Item.Pool.valueOf(rs.getString("pool")),
                         rs.getDate("last_recall").toLocalDate(),
                         rs.getInt("total_recalls")
                 );
                 res.add(p);
             }
         } catch (SQLException e) {
-            System.err.println("Failed to fetch problems from DuckDB\n" + e);
+            System.err.println("Failed to fetch items from DuckDB\n" + e);
             return Optional.empty();
         }
         return Optional.of(res);
     }
 
-    public boolean deleteProblemById(int problemId) {
-        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM problems WHERE id=?");) {
-            statement.setInt(1, problemId);
+    public boolean deleteItemsById(int itemId) {
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM items WHERE id=?");) {
+            statement.setInt(1, itemId);
             int rows = statement.executeUpdate();
             return rows == 1;
         } catch (SQLException e) {
@@ -192,9 +192,9 @@ public class DuckDBManager implements AutoCloseable {
         }
     }
 
-    public boolean contains(int problemId) {
-        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) as count FROM problems WHERE id=?")) {
-            statement.setInt(1, problemId);
+    public boolean contains(int itemId) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) as count FROM items WHERE id=?")) {
+            statement.setInt(1, itemId);
             ResultSet rs = statement.executeQuery();
             rs.next();
             if (rs.getInt(1) == 1) return true;
@@ -205,7 +205,7 @@ public class DuckDBManager implements AutoCloseable {
     }
 
     public boolean clearDatabase(){
-        try(PreparedStatement statement = connection.prepareStatement("TRUNCATE TABLE problems")) {
+        try(PreparedStatement statement = connection.prepareStatement("TRUNCATE TABLE items")) {
             statement.execute();
             return true;
         } catch (SQLException e) {

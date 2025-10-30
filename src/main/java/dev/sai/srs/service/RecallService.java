@@ -1,6 +1,6 @@
 package dev.sai.srs.service;
 
-import dev.sai.srs.data.Problem;
+import dev.sai.srs.data.Item;
 import dev.sai.srs.db.DuckDBManager;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -8,8 +8,8 @@ import java.util.*;
 
 public class RecallService {
 
-    private final Map<Problem.Pool, Double> map = Map.of(Problem.Pool.H,3.0,Problem.Pool.M,2.0,Problem.Pool.L,1.0);
-    private PriorityQueue<Problem> problemQueue = new PriorityQueue<>((a,b)->{
+    private final Map<Item.Pool, Double> map = Map.of(Item.Pool.H,3.0, Item.Pool.M,2.0, Item.Pool.L,1.0);
+    private PriorityQueue<Item> itemQueue = new PriorityQueue<>((a, b)->{
         double aRate=getRating(a);
         double bRate=getRating(b);
         if (aRate > bRate) return -1;
@@ -34,33 +34,33 @@ public class RecallService {
     }
 
     private void loadQueue(DuckDBManager dbManager){
-        Optional<List<Problem>> list = dbManager.getAllProblems();
+        Optional<List<Item>> list = dbManager.getAllItems();
         if (list.isEmpty()) throw new RuntimeException("Invalid recall attempt");
-        for (Problem p: list.get()) problemQueue.add(p);
+        for (Item p: list.get()) itemQueue.add(p);
     }
 
-    public double getRating(Problem p){
+    public double getRating(Item p){
         long daysSinceLast = Math.max(1,ChronoUnit.DAYS.between(p.getLastRecall(), date)+1);
-        double res = ((map.get(p.getProblemPool()) * alpha) * Math.pow((double)daysSinceLast,beta))/(p.getTotalRecalls()+gamma);
+        double res = ((map.get(p.getItemPool()) * alpha) * Math.pow((double)daysSinceLast,beta))/(p.getTotalRecalls()+gamma);
         return res;
     }
 
     public List<Integer> recall(int x){
         List<Integer> res = new ArrayList<>();
-        while (x-->0 && !problemQueue.isEmpty()) res.add(problemQueue.poll().getProblemId());
+        while (x-->0 && !itemQueue.isEmpty()) res.add(itemQueue.poll().getItemId());
         return res;
     }
 
-    public Map<Problem.Pool, Double> getMap() {
+    public Map<Item.Pool, Double> getMap() {
         return map;
     }
 
-    public PriorityQueue<Problem> getProblemQueue() {
-        return problemQueue;
+    public PriorityQueue<Item> getItemQueue() {
+        return itemQueue;
     }
 
-    public void setProblemQueue(PriorityQueue<Problem> problemQueue) {
-        this.problemQueue = problemQueue;
+    public void setItemQueue(PriorityQueue<Item> itemQueue) {
+        this.itemQueue = itemQueue;
     }
 
     public Double getAlpha() {

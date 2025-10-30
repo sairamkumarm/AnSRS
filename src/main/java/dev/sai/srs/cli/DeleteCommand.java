@@ -4,7 +4,7 @@ import dev.sai.srs.printer.Printer;
 import picocli.CommandLine.*;
 
 @Command(name = "delete",
-        description = "delete lets you remove from session queue, completed queue and db, depending on the flags, by default it removes from session queue",
+        description = "delete lets you remove from WorkingSet, CompletedSet and db, depending on the flags, by default it removes from WorkingSet",
         mixinStandardHelpOptions = true)
 public class DeleteCommand implements Runnable {
 
@@ -14,19 +14,19 @@ public class DeleteCommand implements Runnable {
     @Spec
     private Model.CommandSpec spec;
 
-    @Parameters(index = "0", paramLabel = "PROBLEM_ID", description = "Problem Id", defaultValue = "0")
-    private int problemId;
+    @Parameters(index = "0", paramLabel = "ITEM_ID", description = "Unique identifier of an item", defaultValue = "0")
+    private int itemId;
 
-    @Option(names = {"-c", "--completed"}, description = "Removes from problems that are completed but, are yet to be commited to the database.")
-    private boolean deleteFromUpdateCache;
+    @Option(names = {"-c", "--completed"}, description = "Removes from items that are completed but, are yet to be commited to the database.")
+    private boolean deleteFromCompletedSet;
 
-    @Option(names = {"-d", "--database"}, description = "Removes a problem from the database and caches")
+    @Option(names = {"-d", "--database"}, description = "Removes a item from the database and sets")
     private boolean deleteFromDatabase;
 
     @Option(names = "--sure", description = "A defensive fallback to prevent accidental deletions", required = true)
     private boolean sure;
 
-    @Option(names = {"--hard-reset"}, description = "Hard resets all the persistent data, cache included")
+    @Option(names = {"--hard-reset"}, description = "Hard resets all the persistent data, sets included")
     private boolean reset;
 
     @Override
@@ -34,44 +34,44 @@ public class DeleteCommand implements Runnable {
         if (!sure) {
             throw new ParameterException(spec.commandLine(),"--sure flag is needed to perform deletions.");
         }
-        if (problemId==0){
+        if (itemId==0){
             if (reset) {
                 if (
                 parent.db.clearDatabase()&&
-                parent.updateCache.clearCache()&&
-                parent.sessionCache.clearCache()
+                parent.completedSet.clearSet()&&
+                parent.workingSet.clearSet()
                 )
                     System.out.println("Reset successful");
                 else System.err.println("Reset failed");
                 return;
             }
-            else throw new ParameterException(spec.commandLine(),"PROBLEM_ID can be skipped only during the --reset command");
+            else throw new ParameterException(spec.commandLine(),"ITEM_ID can be skipped only during the --reset command");
         }
 
-        if (problemId < 0) {
-            throw new ParameterException(spec.commandLine(),"Problem Id ["+problemId+"] cannot be non-positive");
+        if (itemId < 0) {
+            throw new ParameterException(spec.commandLine(),"ITEM_ID ["+itemId+"] cannot be non-positive");
         }
         if (deleteFromDatabase) {
-            if (!parent.db.deleteProblemById(problemId)) {
-                System.err.println("Error in deleting problem ["+problemId+"] from DB, use --debug to confirm its existence");
+            if (!parent.db.deleteItemsById(itemId)) {
+                System.err.println("Error in deleting ITEM_ID ["+itemId+"] from DB, use --debug to confirm its existence");
                 return;
             }
-            System.out.println("Problem ["+problemId+"] deleted from database");
+            System.out.println("ITEM_ID ["+itemId+"] deleted from database");
         }
-        if (deleteFromUpdateCache) {
-            if (!parent.updateCache.removeProblem(problemId)) {
-                throw new ParameterException(spec.commandLine(),"Problem ["+problemId+"] non-existent in update cache");
+        if (deleteFromCompletedSet) {
+            if (!parent.completedSet.removeItem(itemId)) {
+                throw new ParameterException(spec.commandLine(),"ITEM_ID ["+itemId+"] non-existent in CompletedSet");
             } else {
-                System.out.println("Problem ["+problemId+"] deleted from update cache");
+                System.out.println("ITEM_ID ["+itemId+"] deleted from CompletedSet");
             }
         }
-        if (!parent.sessionCache.removeProblem(problemId)) {
-            throw new ParameterException(spec.commandLine(),"Problem ["+problemId+"] non-existent in session cache");
+        if (!parent.workingSet.removeItem(itemId)) {
+            throw new ParameterException(spec.commandLine(),"ITEM_ID ["+itemId+"] non-existent in WorkingSet");
         } else {
-            System.out.println("Problem ["+problemId+"] deleted from session");
+            System.out.println("ITEM_ID ["+itemId+"] deleted from WorkingSet");
         }
 
-        if (parent.debug) Printer.statePrinter(parent.sessionCache, parent.updateCache, parent.db);
+        if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
 
     }
 

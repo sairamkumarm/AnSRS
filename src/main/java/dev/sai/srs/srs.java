@@ -1,7 +1,7 @@
 package dev.sai.srs;
 
-import dev.sai.srs.cache.SessionCache;
-import dev.sai.srs.cache.UpdateCache;
+import dev.sai.srs.set.WorkingSet;
+import dev.sai.srs.set.CompletedSet;
 import dev.sai.srs.cli.SRSCommand;
 import dev.sai.srs.db.DuckDBManager;
 import picocli.CommandLine;
@@ -14,15 +14,15 @@ import java.nio.file.Path;
 public class srs {
 
     public static final Path srsDir;
-    public static final Path sessionCachePath;
-    public static final Path updateCachePath;
+    public static final Path workingSetPath;
+    public static final Path completedSetPath;
     public static final Path databasePath;
 
     static {
         String baseDir = System.getenv("APPDATA");
         srsDir = Path.of(baseDir, "SRS");
-        sessionCachePath = srsDir.resolve("session.cache");
-        updateCachePath = srsDir.resolve("update.cache");
+        workingSetPath = srsDir.resolve("working.set");
+        completedSetPath = srsDir.resolve("completed.set");
         databasePath = srsDir.resolve("srs.duckdb");
 
 
@@ -32,8 +32,8 @@ public class srs {
         try {
             Files.createDirectories(srsDir);
 
-            SessionCache sessionCache = new SessionCache(sessionCachePath);
-            UpdateCache updateCache = new UpdateCache(updateCachePath);
+            WorkingSet workingSet = new WorkingSet(workingSetPath);
+            CompletedSet completedSet = new CompletedSet(completedSetPath);
             DuckDBManager db = new DuckDBManager(databasePath);
             ColorScheme colorScheme = new ColorScheme.Builder()
                     .commands    (Style.bold, Style.underline)    // combine multiple styles
@@ -43,7 +43,7 @@ public class srs {
                     .errors      (Style.fg_red, Style.bold)
                     .stackTraces (Style.italic)
                     .build();
-            SRSCommand root = new SRSCommand(sessionCache, updateCache, db);
+            SRSCommand root = new SRSCommand(workingSet, completedSet, db);
             int exitCode = new CommandLine(root).setColorScheme(colorScheme).execute(args);
             db.close();
             System.exit(exitCode);

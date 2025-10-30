@@ -1,8 +1,8 @@
 package dev.sai.srs.printer;
 
-import dev.sai.srs.cache.SessionCache;
-import dev.sai.srs.cache.UpdateCache;
-import dev.sai.srs.data.Problem;
+import dev.sai.srs.data.Item;
+import dev.sai.srs.set.CompletedSet;
+import dev.sai.srs.set.WorkingSet;
 import dev.sai.srs.db.DuckDBManager;
 
 import java.util.List;
@@ -30,10 +30,10 @@ public class Printer {
     private static final int RECALL_WIDTH = 11;
     private static final int RECALLS_WIDTH = 7;
 
-    public static void printProblemsGrid(List<Problem> problems) {
-        if (problems == null || problems.isEmpty()) {
+    public static void printItemsGrid(List<Item> items) {
+        if (items == null || items.isEmpty()) {
             System.out.println("╭──────────────────────────╮");
-            System.out.println("│  No problems to display  │");
+            System.out.println("│  No items to display  │");
             System.out.println("╰──────────────────────────╯");
             return;
         }
@@ -42,12 +42,12 @@ public class Printer {
         printHeader();
         printMiddleBorder();
 
-        for (Problem p : problems) {
-            printProblemRow(p);
+        for (Item p : items) {
+            printItemRow(p);
         }
 
         printBottomBorder();
-        System.out.println("Total: " + problems.size() + " problem(s)");
+        System.out.println("Total: " + items.size() + " item(s)");
     }
 
     private static void printTopBorder() {
@@ -104,16 +104,16 @@ public class Printer {
                 VERTICAL, "Pool", VERTICAL, "Last Recall", VERTICAL, "Recalls", VERTICAL);
     }
 
-    private static void printProblemRow(Problem p) {
+    private static void printItemRow(Item p) {
         System.out.printf("%s %-6s %s %-25s %s %-60s %s %-4s %s %-11s %s %-7s %s%n",
                 VERTICAL,
-                p.getProblemId(),
+                p.getItemId(),
                 VERTICAL,
-                truncate(p.getProblemName(), NAME_WIDTH),
+                truncate(p.getItemName(), NAME_WIDTH),
                 VERTICAL,
-                truncate(p.getProblemLink(), LINK_WIDTH),
+                truncate(p.getItemLink(), LINK_WIDTH),
                 VERTICAL,
-                p.getProblemPool(),
+                p.getItemPool(),
                 VERTICAL,
                 p.getLastRecall(),
                 VERTICAL,
@@ -127,16 +127,16 @@ public class Printer {
         return s.length() <= maxLength ? s : s.substring(0, maxLength - 3) + "...";
     }
 
-    public static void statePrinter(SessionCache sessionCache, UpdateCache updateCache, DuckDBManager duckDBManager) {
+    public static void statePrinter(WorkingSet workingSet, CompletedSet completedSet, DuckDBManager duckDBManager) {
         System.out.println("╭────────────SYSTEM STATUS─────────────╮");
 
-        System.out.println("Session Cache: "+sessionCache.getProblemIdSet());
+        System.out.println("WorkingSet: "+ workingSet.getItemIdSet());
 
-        System.out.println("Update Cache: "+updateCache.getProblems());
+        System.out.println("CompletedSet: "+ completedSet.getItems());
 
-        Optional<List<Problem>> problemsList = duckDBManager.getAllProblems();
-        if (problemsList.isPresent()) {
-            printProblemsGrid(problemsList.get());
+        Optional<List<Item>> itemsList = duckDBManager.getAllItems();
+        if (itemsList.isPresent()) {
+            printItemsGrid(itemsList.get());
         } else {
             System.out.println("╭───────────────────────╮");
             System.out.println("│  Database is empty   │");

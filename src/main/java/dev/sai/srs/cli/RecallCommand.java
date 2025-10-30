@@ -1,6 +1,6 @@
 package dev.sai.srs.cli;
 
-import dev.sai.srs.data.Problem;
+import dev.sai.srs.data.Item;
 import dev.sai.srs.printer.Printer;
 import dev.sai.srs.service.RecallService;
 import picocli.CommandLine.*;
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 @Command(name = "recall",
-        description = "Loads problems from database into cache for recall",
+        description = "Loads items from database into WorkingSet for recall",
         mixinStandardHelpOptions = true)
 public class RecallCommand implements Runnable {
 
@@ -19,35 +19,35 @@ public class RecallCommand implements Runnable {
     @Spec
     private Model.CommandSpec spec;
 
-    @Parameters(index = "0", paramLabel = "RECALL_COUNT", description = "The amount of problems to load into cache for recall")
+    @Parameters(index = "0", paramLabel = "RECALL_COUNT", description = "The amount of items to load into WorkingSet for recall")
     private int recallCount;
 
-    @Option(names = {"-f", "--force"}, description = "use --force, to overwrite existing non empty session cache")
+    @Option(names = {"-f", "--force"}, description = "use --force, to overwrite existing non-empty WorkingSet")
     private boolean force;
 
-    @Option(names = {"-a", "--append"}, description = "use --append, to append to an existing non empty session cache, only unique problems are added")
+    @Option(names = {"-a", "--append"}, description = "use --append, to append to an existing non empty WorkingSet, only unique items are added")
     private boolean append;
 
     @Override
     public void run() {
         if (recallCount <= 0) throw new ParameterException(spec.commandLine(),"Recall count cannot be non-positive");
         RecallService recallService = new RecallService(parent.db);
-        Set<Integer> cacheProblems = parent.sessionCache.getProblemIdSet();
-        if (!cacheProblems.isEmpty()) {
+        Set<Integer> workingSetItems = parent.workingSet.getItemIdSet();
+        if (!workingSetItems.isEmpty()) {
             if (!force)
-                throw new ParameterException(spec.commandLine(), "Session cache non-empty, use --force and/or --append to bypass");
+                throw new ParameterException(spec.commandLine(), "WorkingSet non-empty, use --force and/or --append to bypass");
             if (!append) {
-                cacheProblems.clear();
-                System.out.println("Overwriting existing cache");
+                workingSetItems.clear();
+                System.out.println("Overwriting existing WorkingSet");
             } else {
-                System.out.println("Appending problems to non-empty session");
+                System.out.println("Appending items to non-empty WorkingSet");
             }
         }
-        cacheProblems.addAll(recallService.recall(recallCount));
-        parent.sessionCache.fillCache(cacheProblems);
-        System.out.println(cacheProblems.size() + " problems in cache");
-        List<Problem> list = parent.db.getProblemsFromList(cacheProblems.stream().toList()).orElse(new ArrayList<>());
-        Printer.printProblemsGrid(list);
+        workingSetItems.addAll(recallService.recall(recallCount));
+        parent.workingSet.fillSet(workingSetItems);
+        System.out.println(workingSetItems.size() + " items in WorkingSet");
+        List<Item> list = parent.db.getItemsFromList(workingSetItems.stream().toList()).orElse(new ArrayList<>());
+        Printer.printItemsGrid(list);
 
     }
 }

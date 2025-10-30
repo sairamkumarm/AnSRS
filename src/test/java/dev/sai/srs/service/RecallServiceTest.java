@@ -1,6 +1,6 @@
 package dev.sai.srs.service;
 
-import dev.sai.srs.data.Problem;
+import dev.sai.srs.data.Item;
 import dev.sai.srs.db.DuckDBManager;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,28 +16,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RecallServiceTest {
 
     private DuckDBManager dbMock;
-    private List<Problem> problems;
+    private List<Item> items;
     private RecallService service;
     private final LocalDate today = LocalDate.of(2025, 1, 1);
 
     @BeforeAll
     void setup() {
         dbMock = Mockito.mock(DuckDBManager.class);
-        problems = new ArrayList<>();
+        items = new ArrayList<>();
 
-        // Problem(id, name, link, pool, lastRecall, totalRecalls)
-        problems.add(new Problem(1, "H-12d-0rec", "", Problem.Pool.H, today.minusDays(12), 0)); // daysSince=13
-        problems.add(new Problem(2, "L-15d-8rec", "", Problem.Pool.L, today.minusDays(15), 8)); // daysSince=16
-        problems.add(new Problem(3, "L-15d-0rec", "", Problem.Pool.L, today.minusDays(15), 0)); // daysSince=16
-        problems.add(new Problem(4, "M-7d-2rec", "", Problem.Pool.M, today.minusDays(7), 2));   // daysSince=8
-        problems.add(new Problem(5, "H-0d-0rec", "", Problem.Pool.H, today, 0));               // daysSince=1
-        problems.add(new Problem(6, "L-30d-3rec", "", Problem.Pool.L, today.minusDays(30), 3));// daysSince=31
-        problems.add(new Problem(7, "H-10d-2rec", "", Problem.Pool.H, today.minusDays(10), 2));// daysSince=11
-        problems.add(new Problem(8, "M-2d-0rec", "", Problem.Pool.M, today.minusDays(2), 0));   // daysSince=3
-        problems.add(new Problem(9, "L-2d-0rec", "", Problem.Pool.L, today.minusDays(2), 0));   // daysSince=3
-        problems.add(new Problem(10, "M-0d-0rec", "", Problem.Pool.M, today, 0));              // daysSince=1
+        // Item(id, name, link, pool, lastRecall, totalRecalls)
+        items.add(new Item(1, "H-12d-0rec", "", Item.Pool.H, today.minusDays(12), 0)); // daysSince=13
+        items.add(new Item(2, "L-15d-8rec", "", Item.Pool.L, today.minusDays(15), 8)); // daysSince=16
+        items.add(new Item(3, "L-15d-0rec", "", Item.Pool.L, today.minusDays(15), 0)); // daysSince=16
+        items.add(new Item(4, "M-7d-2rec", "", Item.Pool.M, today.minusDays(7), 2));   // daysSince=8
+        items.add(new Item(5, "H-0d-0rec", "", Item.Pool.H, today, 0));               // daysSince=1
+        items.add(new Item(6, "L-30d-3rec", "", Item.Pool.L, today.minusDays(30), 3));// daysSince=31
+        items.add(new Item(7, "H-10d-2rec", "", Item.Pool.H, today.minusDays(10), 2));// daysSince=11
+        items.add(new Item(8, "M-2d-0rec", "", Item.Pool.M, today.minusDays(2), 0));   // daysSince=3
+        items.add(new Item(9, "L-2d-0rec", "", Item.Pool.L, today.minusDays(2), 0));   // daysSince=3
+        items.add(new Item(10, "M-0d-0rec", "", Item.Pool.M, today, 0));              // daysSince=1
 
-        Mockito.when(dbMock.getAllProblems()).thenReturn(Optional.of(problems));
+        Mockito.when(dbMock.getAllItems()).thenReturn(Optional.of(items));
 
         // Use the existing implementation (alpha=10, beta=1.2, gamma=1, date=today)
         service = new RecallService(dbMock, 10.0, 1.2, 1.0, today);
@@ -45,8 +45,8 @@ class RecallServiceTest {
 
     private double rating(int id) {
         return service.getRating(
-                problems.stream()
-                        .filter(p -> p.getProblemId() == id)
+                items.stream()
+                        .filter(p -> p.getItemId() == id)
                         .findFirst()
                         .orElseThrow()
         );
@@ -117,13 +117,13 @@ class RecallServiceTest {
             "H, L"
     })
     void poolHierarchyRespected(String stronger, String weaker) {
-        Problem.Pool pStrong = Problem.Pool.valueOf(stronger);
-        Problem.Pool pWeak = Problem.Pool.valueOf(weaker);
+        Item.Pool pStrong = Item.Pool.valueOf(stronger);
+        Item.Pool pWeak = Item.Pool.valueOf(weaker);
 
-        // Create two problems with identical dates and recalls to test pure-pool effect.
+        // Create two items with identical dates and recalls to test pure-pool effect.
         // daysSince = 7 + 1 = 8 in the service calculation
-        Problem A = new Problem(200, "A", "", pStrong, today.minusDays(7), 0); // daysSince=8
-        Problem B = new Problem(201, "B", "", pWeak, today.minusDays(7), 0);   // daysSince=8
+        Item A = new Item(200, "A", "", pStrong, today.minusDays(7), 0); // daysSince=8
+        Item B = new Item(201, "B", "", pWeak, today.minusDays(7), 0);   // daysSince=8
 
         // Example numeric check (for H vs M):
         // rating(H,8,0) = (3*10)*8^1.2 / 1 = 363.7719759624955
@@ -142,12 +142,12 @@ class RecallServiceTest {
     @Test
     void recallsDecreaseWhenDaysConstant() {
         // id=9 base (L,3d,0rec): rating(9) = (1*10)*3^1.2 / 1 = 37.37192818846552
-        Problem fresh = problems.get(9 - 1);  // id=9
+        Item fresh = items.get(9 - 1);  // id=9
         double base = rating(9);
 
-        // New problem same lastRecall but 5 recalls:
+        // New item same lastRecall but 5 recalls:
         // rating = 10 * 3^1.2 / (5+1) = 6.2286546980775865
-        Problem moreRec = new Problem(300, "moreRec", "", Problem.Pool.L, fresh.getLastRecall(), 5);
+        Item moreRec = new Item(300, "moreRec", "", Item.Pool.L, fresh.getLastRecall(), 5);
         double decay = service.getRating(moreRec);
 
         assertThat(base).isGreaterThan(decay);
