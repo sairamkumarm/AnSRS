@@ -11,16 +11,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class DuckDBManager implements AutoCloseable {
+public class DBManager implements AutoCloseable {
     private final Connection connection;
 
-    public DuckDBManager(Path dbPath) {
+    public DBManager(Path dbPath) {
         try {
             if (!Files.exists(dbPath.getParent())) {
                 Files.createDirectories(dbPath.getParent());
             }
-            String url = "jdbc:duckdb:" + dbPath.toAbsolutePath();
-            connection = DriverManager.getConnection(url);
+            String url = "jdbc:h2:file:" + dbPath.toAbsolutePath();
+            connection = DriverManager.getConnection(url, "sa", "");
             initTable();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to connect to database", e);
@@ -33,11 +33,11 @@ public class DuckDBManager implements AutoCloseable {
         try (PreparedStatement statement = connection.prepareStatement("""
                 CREATE TABLE IF NOT EXISTS items(
                     id INTEGER PRIMARY KEY,
-                    name TEXT,
-                    link TEXT,
-                    pool TEXT,
-                    last_recall TEXT,
-                    total_recalls INTEGER,
+                    name VARCHAR(255),
+                    link VARCHAR(255),
+                    pool CHARACTER,
+                    last_recall VARCHAR(255),
+                    total_recalls INTEGER
                 )
                 """)) {
             statement.execute();
@@ -69,7 +69,7 @@ public class DuckDBManager implements AutoCloseable {
     public boolean updateItem(Item item) {
         try (PreparedStatement ps = connection.prepareStatement(
                 """
-                            INSERT OR REPLACE INTO items
+                            MERGE INTO items
                             (id, name, link, pool, last_recall, total_recalls)
                             VALUES (?, ?, ?, ?, ?, ?)
                         """
@@ -152,7 +152,7 @@ public class DuckDBManager implements AutoCloseable {
                 items.add(p);
             }
         } catch (SQLException e) {
-            System.err.println("Failed to fetch items from DuckDB\n" + e);
+            System.err.println("Failed to fetch items from DB\n" + e);
             return Optional.empty();
         }
         return Optional.of(items);

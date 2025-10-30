@@ -20,10 +20,11 @@
             <artifactId>picocli</artifactId>
             <version>4.7.7</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.h2database/h2 -->
         <dependency>
-            <groupId>org.duckdb</groupId>
-            <artifactId>duckdb_jdbc</artifactId>
-            <version>1.4.1.0</version>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.3.232</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
         <dependency>
@@ -80,6 +81,89 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>dev.sai.srs.srs</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals><goal>shade</goal></goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>dev.sai.srs.srs</mainClass>
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>com.h2database:h2</artifact>
+                                    <excludes>
+                                        <!-- GUI / Web Console -->
+                                        <exclude>org/h2/tools/Console.class</exclude>
+                                        <exclude>org/h2/console/**</exclude>
+                                        <exclude>org/h2/tools/gui/**</exclude>
+                                        <exclude>org/h2/server/web/**</exclude>
+
+                                        <!-- Networking and remote servers -->
+                                        <exclude>org/h2/server/TcpServer*</exclude>
+                                        <exclude>org/h2/server/Service.class</exclude>
+                                        <exclude>org/h2/server/pg/**</exclude>
+                                        <exclude>org/h2/jmx/**</exclude>
+
+                                        <!-- Tools (not used through JDBC) -->
+                                        <exclude>org/h2/tools/Backup.class</exclude>
+                                        <exclude>org/h2/tools/ChangeFileEncryption.class</exclude>
+                                        <exclude>org/h2/tools/Restore.class</exclude>
+                                        <exclude>org/h2/tools/RunScript.class</exclude>
+                                        <exclude>org/h2/tools/Shell.class</exclude>
+                                        <exclude>org/h2/tools/Upgrade.class</exclude>
+                                        <exclude>org/h2/tools/Script.class</exclude>
+
+                                        <!-- Optional extensions -->
+                                        <exclude>org/h2/fulltext/**</exclude>
+                                        <exclude>org/h2/util/geometry/**</exclude>
+                                        <exclude>org/h2/util/json/**</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>info.picocli</groupId>
+                            <artifactId>picocli-codegen</artifactId>
+                            <version>4.7.7</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    <compilerArgs>
+                        <arg>-Aproject=${project.artifactId}</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
         </plugins>
+
     </build>
 </project>

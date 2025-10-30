@@ -6,6 +6,7 @@ import picocli.CommandLine.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.HashSet;
 import java.util.Set;
 
 @Command(name = "complete",
@@ -38,13 +39,14 @@ public class CompleteCommand implements Runnable {
     public void run() {
         validate();
 
-        Set<Integer> workingSetItemIds = parent.workingSet.getItemIdSet();
+        Set<Integer> workingSetItemIds = new HashSet<>(parent.workingSet.getItemIdSet());
         if (allComplete && itemId == 0) {
             for (int id : workingSetItemIds) {
                 parent.completedSet.addItem(id, null);
                 parent.workingSet.removeItem(id);
             }
             System.out.println("All items in WorkingSet completed.");
+            if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
             return;
         }
 

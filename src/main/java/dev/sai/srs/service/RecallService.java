@@ -1,7 +1,7 @@
 package dev.sai.srs.service;
 
 import dev.sai.srs.data.Item;
-import dev.sai.srs.db.DuckDBManager;
+import dev.sai.srs.db.DBManager;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -21,11 +21,11 @@ public class RecallService {
     private Double beta = 1.2;
     private Double gamma = 1.0;
     private LocalDate date = LocalDate.now();
-    public RecallService(DuckDBManager dbManager){
+    public RecallService(DBManager dbManager){
         loadQueue(dbManager);
     }
 
-    public RecallService(DuckDBManager dbManager, Double alpha, Double beta, Double gamma, LocalDate date){
+    public RecallService(DBManager dbManager, Double alpha, Double beta, Double gamma, LocalDate date){
         this.alpha = alpha;
         this.beta= beta;
         this.gamma = gamma;
@@ -33,7 +33,7 @@ public class RecallService {
         loadQueue(dbManager);
     }
 
-    private void loadQueue(DuckDBManager dbManager){
+    private void loadQueue(DBManager dbManager){
         Optional<List<Item>> list = dbManager.getAllItems();
         if (list.isEmpty()) throw new RuntimeException("Invalid recall attempt");
         for (Item p: list.get()) itemQueue.add(p);

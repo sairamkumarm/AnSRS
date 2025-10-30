@@ -1,7 +1,7 @@
 package dev.sai.srs.service;
 
 import dev.sai.srs.data.Item;
-import dev.sai.srs.db.DuckDBManager;
+import dev.sai.srs.db.DBManager;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -15,14 +15,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RecallServiceTest {
 
-    private DuckDBManager dbMock;
+    private DBManager dbMock;
     private List<Item> items;
     private RecallService service;
     private final LocalDate today = LocalDate.of(2025, 1, 1);
 
     @BeforeAll
     void setup() {
-        dbMock = Mockito.mock(DuckDBManager.class);
+        dbMock = Mockito.mock(DBManager.class);
         items = new ArrayList<>();
 
         // Item(id, name, link, pool, lastRecall, totalRecalls)

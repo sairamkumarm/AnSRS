@@ -2,7 +2,7 @@ package dev.sai.srs.cli;
 
 import dev.sai.srs.set.WorkingSet;
 import dev.sai.srs.set.CompletedSet;
-import dev.sai.srs.db.DuckDBManager;
+import dev.sai.srs.db.DBManager;
 import dev.sai.srs.printer.Printer;
 import picocli.CommandLine;
 
@@ -14,12 +14,12 @@ import picocli.CommandLine;
 public class SRSCommand implements Runnable{
     public final WorkingSet workingSet;
     public final CompletedSet completedSet;
-    public final DuckDBManager db;
+    public final DBManager db;
 
-    public SRSCommand(WorkingSet workingSet, CompletedSet completedSet, DuckDBManager duckDBManager) {
+    public SRSCommand(WorkingSet workingSet, CompletedSet completedSet, DBManager DBManager) {
         this.workingSet = workingSet;
         this.completedSet = completedSet;
-        this.db = duckDBManager;
+        this.db = DBManager;
     }
 
     @CommandLine.Option(names = {"-d", "--debug"}, description = "Prints set and db state", required = false)
