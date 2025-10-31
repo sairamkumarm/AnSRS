@@ -85,8 +85,8 @@ public class CompletedSetTests {
                     if (!fileItems.get(pid).equals(setItems.get(pid)));
                 }
             }
-            System.out.println(setItems);
-            System.out.println(fileItems);
+//            System.out.println(setItems);
+//            System.out.println(fileItems);
             if(testCompletedSet.getItems().size() != Integer.parseInt(lines.get(1).trim())) return false;
             return true;
         } catch (IOException e) {

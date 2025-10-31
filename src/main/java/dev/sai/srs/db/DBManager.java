@@ -6,9 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DBManager implements AutoCloseable {
@@ -65,6 +63,66 @@ public class DBManager implements AutoCloseable {
         }
     }
 
+    public boolean insertItemsBatch(List<Item> items) {
+        try (PreparedStatement statement = connection.prepareStatement("""
+                INSERT INTO items
+                (id, name, link, pool, last_recall, total_recalls)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """)) {
+            connection.setAutoCommit(false);
+            for (Item item : items) {
+                statement.setInt(1, item.getItemId());
+                statement.setString(2, item.getItemName());
+                statement.setString(3, item.getItemLink());
+                statement.setString(4, item.getItemPool().name());
+                statement.setString(5, item.getLastRecall().toString());
+                statement.setInt(6, item.getTotalRecalls());
+                statement.addBatch();
+            }
+            statement.executeBatch();
+            connection.commit();
+            return true;
+        } catch (SQLException e) {
+            try {connection.rollback();} catch (SQLException ignore) {}
+            if (Objects.equals(e.getSQLState(), "23505")) throw new RuntimeException("ERROR: Duplicate ITEM_ID found.");
+            return false;
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException ignore) {
+            }
+        }
+    }
+
+    public boolean upsertItemsBatch(List<Item> items) {
+        try (PreparedStatement statement = connection.prepareStatement("""
+                MERGE INTO items
+                (id, name, link, pool, last_recall, total_recalls)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """)) {
+            connection.setAutoCommit(false);
+            for (Item item : items) {
+                statement.setInt(1, item.getItemId());
+                statement.setString(2, item.getItemName());
+                statement.setString(3, item.getItemLink());
+                statement.setString(4, item.getItemPool().name());
+                statement.setString(5, item.getLastRecall().toString());
+                statement.setInt(6, item.getTotalRecalls());
+                statement.addBatch();
+            }
+            statement.executeBatch();
+            connection.commit();
+            return true;
+        } catch (SQLException e) {
+            try {connection.rollback();} catch (SQLException ignore) {}
+            return false;
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException ignore) {
+            }
+        }
+    }
 
     public boolean updateItem(Item item) {
         try (PreparedStatement ps = connection.prepareStatement(
@@ -96,7 +154,7 @@ public class DBManager implements AutoCloseable {
                         """)
         ) {
             connection.setAutoCommit(false);
-            for (Item item : items){
+            for (Item item : items) {
                 ps.setString(1, item.getItemName());
                 ps.setString(2, item.getItemLink());
                 ps.setString(3, item.getItemPool().name());
@@ -109,10 +167,16 @@ public class DBManager implements AutoCloseable {
             connection.commit();
             return true;
         } catch (SQLException e) {
-            try{ connection.rollback();} catch (SQLException ignore) {}
+            try {
+                connection.rollback();
+            } catch (SQLException ignore) {
+            }
             return false;
         } finally {
-            try { connection.setAutoCommit(true);} catch (SQLException ignore){}
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException ignore) {
+            }
         }
     }
 
@@ -153,6 +217,20 @@ public class DBManager implements AutoCloseable {
             }
         } catch (SQLException e) {
             System.err.println("Failed to fetch items from DB\n" + e);
+            return Optional.empty();
+        }
+        return Optional.of(items);
+    }
+
+    public Optional<HashSet<Integer>> getAllItemsIds() {
+        HashSet<Integer> items = new HashSet<>();
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT id FROM items");
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                items.add(rs.getInt(1));
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to fetch ITEM_IDs from DB\n" + e);
             return Optional.empty();
         }
         return Optional.of(items);
@@ -204,8 +282,8 @@ public class DBManager implements AutoCloseable {
         }
     }
 
-    public boolean clearDatabase(){
-        try(PreparedStatement statement = connection.prepareStatement("TRUNCATE TABLE items")) {
+    public boolean clearDatabase() {
+        try (PreparedStatement statement = connection.prepareStatement("TRUNCATE TABLE items")) {
             statement.execute();
             return true;
         } catch (SQLException e) {

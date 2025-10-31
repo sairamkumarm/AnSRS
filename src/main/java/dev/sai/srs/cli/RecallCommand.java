@@ -48,6 +48,6 @@ public class RecallCommand implements Runnable {
         System.out.println(workingSetItems.size() + " items in WorkingSet");
         List<Item> list = parent.db.getItemsFromList(workingSetItems.stream().toList()).orElse(new ArrayList<>());
         Printer.printItemsGrid(list);
-
+        if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
     }
 }
