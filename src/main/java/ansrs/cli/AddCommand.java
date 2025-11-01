@@ -1,14 +1,15 @@
-package dev.sai.srs.cli;
+package ansrs.cli;
 
 
-import dev.sai.srs.data.Item;
-import dev.sai.srs.printer.Printer;
+import ansrs.data.Item;
+import ansrs.util.Log;
+import ansrs.util.Printer;
 import picocli.CommandLine.*;
 
 import java.time.LocalDate;
 
 @Command(name = "add",
-        description = "add new items into the item database or update an existing one",
+        description = "Add new items into the item database or update an existing one",
         mixinStandardHelpOptions = true)
 public class AddCommand implements Runnable {
 
@@ -41,15 +42,15 @@ public class AddCommand implements Runnable {
         try {
             if (!parent.db.insertItem(item)) {
                 if (update) {
-                    if (!parent.db.updateItem(item)) System.err.println("Update Failed");
+                    if (!parent.db.updateItem(item)) Log.error("Update Failed");
                 } else {
-                    System.err.println("Insert failed");
+                    Log.error("Insert failed");
                     return;
                 }
             }
-            System.out.println("Successfully added item");
+            Log.info("Successfully added item");
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            Log.error(e.getMessage());
             return;
         }
         if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
@@ -57,15 +58,15 @@ public class AddCommand implements Runnable {
 
     private void validate() {
         if (itemId <= 0 || itemName == null || itemName.isEmpty() || itemLink == null || itemLink.isEmpty() || itemPool == null || itemPool.isEmpty()) {
-            throw new ParameterException(spec.commandLine(), "Invalid parameters, all parameters are required to proceed");
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("Invalid parameters, all parameters are required to proceed"));
         }
         if (!itemLink.startsWith("https://")) {
-            throw new ParameterException(spec.commandLine(), "use https:// for links, to prevent accidental passage of wrong order parameters");
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("use https:// for links, to prevent accidental passage of wrong order parameters"));
         }
         try {
             Item.Pool.valueOf(itemPool.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ParameterException(spec.commandLine(), "Invalid pool value, pick between H, M and L");
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("Invalid pool value, pick between H, M and L"));
         }
     }
 }

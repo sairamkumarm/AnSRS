@@ -1,11 +1,10 @@
-package dev.sai.srs.service;
+package ansrs.service;
 
-import dev.sai.srs.data.Item;
+import ansrs.data.Item;
+import ansrs.util.Log;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
-import picocli.CommandLine;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
@@ -22,7 +21,7 @@ public class CSVImporter {
             Path path = Path.of(filePath).toAbsolutePath().normalize();
             this.reader = new FileReader(String.valueOf(path));
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(Log.errorMsg(e.getMessage()));
         }
     }
 
@@ -40,22 +39,21 @@ public class CSVImporter {
                         Integer.parseInt(record.get(0).trim());
                     } catch (Exception e) {
                         if (isValidHeader(record)) continue;
-                        else throw new RuntimeException("");
+                        else throw new RuntimeException(Log.errorMsg("Invalid CSV Header"));
                     }
                 }
 
                 Optional<Item> itemOptional = validateRecord(record);
                 if (itemOptional.isEmpty()) {
-                    sb.append("WARNING: Invalid ").append(record.toString()).append("\n");
+                    sb.append(Log.warnMsg("Invalid ")).append(record.toString()).append("\n");
                     badRows++;
                 }
                 else items.add(itemOptional.get());
             }
-//            System.out.println(items);
-            if (!sb.isEmpty()) System.err.println("WARNING: "+badRows + " invalid row(s)\n" + sb.toString());
+            if (!sb.isEmpty()) Log.warn(badRows + " invalid row(s)\n" + sb.toString());
             return items;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(Log.errorMsg(e.getMessage()));
         }
     }
 
@@ -82,7 +80,7 @@ public class CSVImporter {
             }
             return Optional.of(new Item(id, name, link, pool, lastRecall, totalRecalls));
         } catch (ArrayIndexOutOfBoundsException e) {
-            throw new RuntimeException("ERROR: CSV Malformed");
+            throw new RuntimeException(Log.errorMsg("ERROR: CSV Malformed"));
         } catch (Exception e) {
             return Optional.empty();
         }

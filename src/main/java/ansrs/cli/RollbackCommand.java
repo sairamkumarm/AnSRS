@@ -1,9 +1,10 @@
-package dev.sai.srs.cli;
+package ansrs.cli;
 
 
-import dev.sai.srs.set.CompletedSet;
-import dev.sai.srs.data.Item;
-import dev.sai.srs.printer.Printer;
+import ansrs.set.CompletedSet;
+import ansrs.data.Item;
+import ansrs.util.Log;
+import ansrs.util.Printer;
 import picocli.CommandLine.*;
 
 import java.time.LocalDate;
@@ -30,26 +31,26 @@ public class RollbackCommand implements Runnable {
         if (all) {
             HashMap<Integer, CompletedSet.Pair<Item.Pool, LocalDate>> completedSetItems = parent.completedSet.getItems();
             if (parent.workingSet.fillSet(completedSetItems.keySet()) &&
-                            parent.completedSet.clearSet()) System.out.println("Full rollback complete.");
-            else System.err.println("Rollback failed.");
+                            parent.completedSet.clearSet()) Log.info("Full rollback complete.");
+            else Log.error("Rollback failed.");
         } else {
             if (parent.workingSet.addItem(itemId) &&
                             parent.completedSet.removeItem(itemId))
-                System.out.println("Item [" + itemId + "] rollback complete.");
-            else System.err.println("Item [" + itemId + "] rollback failed.");
+                Log.info("Item [" + itemId + "] rollback complete.");
+            else Log.error("Item [" + itemId + "] rollback failed.");
         }
         if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
     }
 
     private void validate() {
         if (itemId < 0)
-            throw new ParameterException(spec.commandLine(), "ITEM_ID [" + itemId + "] cannot be non-positive.");
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID [" + itemId + "] cannot be non-positive."));
         if ((itemId == 0 && !all) || (itemId != 0 && all))
-            throw new ParameterException(spec.commandLine(), "Either ITEM_ID must be specified, or --all must be used, they are mutually exclusive.");
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("Either ITEM_ID must be specified, or --all must be used, they are mutually exclusive."));
         if (parent.completedSet.getItems().isEmpty())
-            throw new ParameterException(spec.commandLine(), "Nothing to rollback.");
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("Nothing to rollback."));
         if (itemId!=0 && !parent.completedSet.containsItem(itemId))
-            throw new ParameterException(spec.commandLine(), "ITEM_ID [" + itemId + "] non-existent.");
+            throw new ParameterException(spec.commandLine(),Log.errorMsg("ITEM_ID [" + itemId + "] non-existent."));
     }
 
 }

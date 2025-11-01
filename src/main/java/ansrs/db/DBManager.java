@@ -1,6 +1,7 @@
-package dev.sai.srs.db;
+package ansrs.db;
 
-import dev.sai.srs.data.Item;
+import ansrs.data.Item;
+import ansrs.util.Log;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,9 +22,9 @@ public class DBManager implements AutoCloseable {
             connection = DriverManager.getConnection(url, "sa", "");
             initTable();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to connect to database", e);
+            throw new RuntimeException(Log.errorMsg("Failed to connect to database"), e);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(Log.errorMsg(e.getMessage()));
         }
     }
 
@@ -40,7 +41,7 @@ public class DBManager implements AutoCloseable {
                 """)) {
             statement.execute();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(Log.errorMsg(e.getMessage()));
         }
     }
 
@@ -84,7 +85,7 @@ public class DBManager implements AutoCloseable {
             return true;
         } catch (SQLException e) {
             try {connection.rollback();} catch (SQLException ignore) {}
-            if (Objects.equals(e.getSQLState(), "23505")) throw new RuntimeException("ERROR: Duplicate ITEM_ID found.");
+            if (Objects.equals(e.getSQLState(), "23505")) throw new RuntimeException(Log.errorMsg("ERROR: Duplicate ITEM_ID found."));
             return false;
         } finally {
             try {
@@ -196,7 +197,7 @@ public class DBManager implements AutoCloseable {
                 ));
             } else return Optional.empty();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(Log.errorMsg(e.getMessage()));
         }
     }
 
@@ -216,7 +217,7 @@ public class DBManager implements AutoCloseable {
                 items.add(p);
             }
         } catch (SQLException e) {
-            System.err.println("Failed to fetch items from DB\n" + e);
+            Log.error("Failed to fetch items from DB\n" + e);
             return Optional.empty();
         }
         return Optional.of(items);
@@ -230,7 +231,7 @@ public class DBManager implements AutoCloseable {
                 items.add(rs.getInt(1));
             }
         } catch (SQLException e) {
-            System.err.println("Failed to fetch ITEM_IDs from DB\n" + e);
+            Log.error("Failed to fetch ITEM_IDs from DB\n" + e);
             return Optional.empty();
         }
         return Optional.of(items);
@@ -254,7 +255,7 @@ public class DBManager implements AutoCloseable {
                 res.add(p);
             }
         } catch (SQLException e) {
-            System.err.println("Failed to fetch items from DuckDB\n" + e);
+            Log.error("Failed to fetch items from DuckDB\n" + e);
             return Optional.empty();
         }
         return Optional.of(res);

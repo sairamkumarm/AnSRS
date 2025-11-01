@@ -1,4 +1,4 @@
-package dev.sai.srs.data;
+package ansrs.data;
 
 import java.time.LocalDate;
 

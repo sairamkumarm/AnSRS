@@ -1,7 +1,7 @@
-package dev.sai.srs.service;
+package ansrs.service;
 
-import dev.sai.srs.data.Item;
-import dev.sai.srs.db.DBManager;
+import ansrs.data.Item;
+import ansrs.db.DBManager;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;

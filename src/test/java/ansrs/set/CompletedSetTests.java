@@ -1,6 +1,7 @@
-package dev.sai.srs.set;
+package ansrs.set;
 
-import dev.sai.srs.data.Item;
+import ansrs.data.Item;
+import ansrs.util.Log;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +14,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
 public class CompletedSetTests {
 
@@ -27,7 +28,7 @@ public class CompletedSetTests {
         try {
             Files.createDirectories(srsDir);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(Log.errorMsg(e.getMessage()));
         }
         completedSetTestPath = srsDir.resolve("test_completed.set");
         testCompletedSet = new CompletedSet(completedSetTestPath);
@@ -41,7 +42,7 @@ public class CompletedSetTests {
                 Files.delete(srsDir);
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(Log.errorMsg(e.getMessage()));
         }
     }
 
@@ -61,12 +62,12 @@ public class CompletedSetTests {
             Assertions.assertEquals(LocalDate.now(), LocalDate.parse(lines.getFirst()));
             Assertions.assertEquals("0", lines.get(1).trim());
         } catch (IOException e) {
-            throw new RuntimeException("Error reading set file");
+            throw new RuntimeException(Log.errorMsg("Error reading set file"));
         }
     }
 
     private boolean isSetFileObjectEqual() {
-        Map<Integer, CompletedSet.Pair<Item.Pool, LocalDate>> fileItems = new HashMap<>();
+        HashMap<Integer, CompletedSet.Pair<Item.Pool, LocalDate>> fileItems = new HashMap<>();
         HashMap<Integer, CompletedSet.Pair<Item.Pool, LocalDate>> setItems = testCompletedSet.getItems();
         try {
             List<String> lines = Files.readAllLines(completedSetTestPath);
@@ -82,7 +83,10 @@ public class CompletedSetTests {
                     Item.Pool pool = temp[1].equals("null") ? null : Item.Pool.valueOf(temp[1].toUpperCase());
                     LocalDate date = LocalDate.parse(temp[2]);
                     fileItems.put(pid, new CompletedSet.Pair<>(pool, date));
-                    if (!fileItems.get(pid).equals(setItems.get(pid)));
+                    System.out.println(fileItems.get(pid) + "  " +(setItems.get(pid)));
+                    CompletedSet.Pair<Item.Pool, LocalDate> f = fileItems.get(pid);
+                    CompletedSet.Pair<Item.Pool, LocalDate> s = setItems.get(pid);
+                    if (!Objects.equals(f.getPool(), s.getPool()) || !Objects.equals(f.getLast_recall(), s.getLast_recall())) return false;
                 }
             }
 //            System.out.println(setItems);
@@ -90,11 +94,11 @@ public class CompletedSetTests {
             if(testCompletedSet.getItems().size() != Integer.parseInt(lines.get(1).trim())) return false;
             return true;
         } catch (IOException e) {
-            throw new RuntimeException("Error validating set file");
+            throw new RuntimeException(Log.errorMsg("Error validating set file"));
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Pool malformed");
+            throw new RuntimeException(Log.errorMsg("Pool malformed"));
         } catch (DateTimeParseException e) {
-            throw new RuntimeException("Date malformed");
+            throw new RuntimeException(Log.errorMsg("Date malformed"));
         }
     }
 

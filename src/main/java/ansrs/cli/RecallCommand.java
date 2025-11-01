@@ -1,8 +1,9 @@
-package dev.sai.srs.cli;
+package ansrs.cli;
 
-import dev.sai.srs.data.Item;
-import dev.sai.srs.printer.Printer;
-import dev.sai.srs.service.RecallService;
+import ansrs.data.Item;
+import ansrs.util.Log;
+import ansrs.util.Printer;
+import ansrs.service.RecallService;
 import picocli.CommandLine.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,22 +31,22 @@ public class RecallCommand implements Runnable {
 
     @Override
     public void run() {
-        if (recallCount <= 0) throw new ParameterException(spec.commandLine(),"Recall count cannot be non-positive");
+        if (recallCount <= 0) throw new ParameterException(spec.commandLine(), Log.errorMsg("Recall count cannot be non-positive"));
         RecallService recallService = new RecallService(parent.db);
         Set<Integer> workingSetItems = parent.workingSet.getItemIdSet();
         if (!workingSetItems.isEmpty()) {
             if (!force)
-                throw new ParameterException(spec.commandLine(), "WorkingSet non-empty, use --force and/or --append to bypass");
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("WorkingSet non-empty, use --force and/or --append to bypass"));
             if (!append) {
                 workingSetItems.clear();
-                System.out.println("Overwriting existing WorkingSet");
+                Log.info("Overwriting existing WorkingSet");
             } else {
-                System.out.println("Appending items to non-empty WorkingSet");
+                Log.info("Appending items to non-empty WorkingSet");
             }
         }
         workingSetItems.addAll(recallService.recall(recallCount));
         parent.workingSet.fillSet(workingSetItems);
-        System.out.println(workingSetItems.size() + " items in WorkingSet");
+        Log.info(workingSetItems.size() + " items in WorkingSet");
         List<Item> list = parent.db.getItemsFromList(workingSetItems.stream().toList()).orElse(new ArrayList<>());
         Printer.printItemsGrid(list);
         if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);

@@ -1,15 +1,17 @@
-package dev.sai.srs.cli;
+package ansrs.cli;
 
-import dev.sai.srs.set.WorkingSet;
-import dev.sai.srs.set.CompletedSet;
-import dev.sai.srs.db.DBManager;
-import dev.sai.srs.printer.Printer;
+import ansrs.set.WorkingSet;
+import ansrs.set.CompletedSet;
+import ansrs.db.DBManager;
+import ansrs.util.Printer;
 import picocli.CommandLine;
 
-@CommandLine.Command(name = "srs",
-        description = "Spaced Repetition System recall practice.",
+@CommandLine.Command(name = "ansrs",
+        description = "AnSRS (Pronounced \"Answers\") is a spaced repetition system.", version = """
+        AnSRS version 1.0.0 2025-11-01
+        """,
         mixinStandardHelpOptions = true,
-        subcommands = {CompleteCommand.class, AddCommand.class, DeleteCommand.class,
+        subcommands = {AddCommand.class, CompleteCommand.class, DeleteCommand.class,
                 CommitCommand.class, RecallCommand.class, RollbackCommand.class, ImportCommand.class})
 public class SRSCommand implements Runnable{
     public final WorkingSet workingSet;

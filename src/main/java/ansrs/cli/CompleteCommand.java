@@ -1,7 +1,8 @@
-package dev.sai.srs.cli;
+package ansrs.cli;
 
-import dev.sai.srs.data.Item;
-import dev.sai.srs.printer.Printer;
+import ansrs.data.Item;
+import ansrs.util.Log;
+import ansrs.util.Printer;
 import picocli.CommandLine.*;
 
 import java.time.LocalDate;
@@ -10,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Command(name = "complete",
-        description = "marks item as completed",
+        description = "Marks item as completed, and transfers them to the CompletedSet",
         mixinStandardHelpOptions = true)
 public class CompleteCommand implements Runnable {
 
@@ -45,7 +46,7 @@ public class CompleteCommand implements Runnable {
                 parent.completedSet.addItem(id, null);
                 parent.workingSet.removeItem(id);
             }
-            System.out.println("All items in WorkingSet completed.");
+            Log.info("All items in WorkingSet completed.");
             if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
             return;
         }
@@ -54,12 +55,12 @@ public class CompleteCommand implements Runnable {
         LocalDate lastRecall = (date!=null) ? LocalDate.parse(date):LocalDate.now();
 
         if (!workingSetItemIds.contains(itemId)) {
-            if (!force) throw new ParameterException(spec.commandLine(), "ITEM_ID [" + itemId + "] doesn't exist in WorkingSet");
+            if (!force) throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID [" + itemId + "] doesn't exist in WorkingSet"));
             Item item = parent.db.getItemById(itemId).
                     orElseThrow(
                             () -> new ParameterException(
                                     spec.commandLine(),
-                                    "ITEM_ID [" + itemId + "] doesn't exist in database")
+                                    Log.errorMsg("ITEM_ID [" + itemId + "] doesn't exist in database"))
                     );
             parent.completedSet.addItem(item.getItemId(), item.getItemPool(), lastRecall);
         } else {
@@ -69,7 +70,7 @@ public class CompleteCommand implements Runnable {
                 parent.completedSet.addItem(itemId, pool, lastRecall);
             }
         }
-        System.out.println("Completed ITEM_ID [" + itemId + "]" + ((pool != null) ? (", and moved item to ITEM_POOL[" + pool.name() + "]") : "") + ((!lastRecall.equals(LocalDate.now()))?", with ITEM_LAST_RECALL["+lastRecall.toString()+"]":""));
+        Log.info("Completed ITEM_ID [" + itemId + "]" + ((pool != null) ? (", and moved item to ITEM_POOL[" + pool.name() + "]") : "") + ((!lastRecall.equals(LocalDate.now()))?", with ITEM_LAST_RECALL["+lastRecall.toString()+"]":""));
         if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
 
     }
@@ -77,30 +78,30 @@ public class CompleteCommand implements Runnable {
 
     private void validate() {
         if (itemId < 0) {
-            throw new ParameterException(spec.commandLine(), "ITEM_ID [" + itemId + "] required to be positive");
+            throw new ParameterException(spec.commandLine(),Log.errorMsg("ITEM_ID [" + itemId + "] required to be positive"));
         }
         if (itemId == 0 && !allComplete) {
-            throw new ParameterException(spec.commandLine(), "ITEM_ID can be [" + itemId + "] only when --all flag is used to completed all the items, otherwise, it is required to be positive");
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID can be [" + itemId + "] only when --all flag is used to completed all the items, otherwise, it is required to be positive"));
         }
         if (itemId != 0) {
             if (allComplete) {
-                throw new ParameterException(spec.commandLine(), "--all / -a flag can only be used when ITEM_ID is not specified");
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("--all / -a flag can only be used when ITEM_ID is not specified"));
             }
             if (!parent.db.contains(itemId)) {
-                throw new ParameterException(spec.commandLine(), "ITEM_ID [" + itemId + "] non-existent in database.");
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID [" + itemId + "] non-existent in database."));
             }
             if (poolString != null) {
                 try {
                     Item.Pool.valueOf(poolString.toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    throw new ParameterException(spec.commandLine(), poolString + " is not a valid ITEM_POOL value.");
+                    throw new ParameterException(spec.commandLine(), Log.errorMsg(poolString + " is not a valid ITEM_POOL value."));
                 }
             }
             if (date != null){
                 try {
                     LocalDate.parse(date);
                 }catch (DateTimeParseException e){
-                    throw new ParameterException(spec.commandLine(), date + " is not a valid ITEM_LAST_RECALL value. use YYYY-MM-DD format.");
+                    throw new ParameterException(spec.commandLine(), Log.errorMsg(date + " is not a valid ITEM_LAST_RECALL value. use YYYY-MM-DD format."));
                 }
             }
         }

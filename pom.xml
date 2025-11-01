@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>dev.sai</groupId>
-    <artifactId>srs</artifactId>
+    <groupId>dev.ansrs</groupId>
+    <artifactId>ansrs</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -79,7 +79,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.6.2</version>
                 <configuration>
-                    <mainClass>dev.sai.srs.srs</mainClass>
+                    <mainClass>ansrs.ansrs</mainClass>
                 </configuration>
             </plugin>
             <plugin>
@@ -96,7 +96,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>dev.sai.srs.srs</mainClass>
+                            <mainClass>ansrs.ansrs</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -113,7 +113,7 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>dev.sai.srs.srs</mainClass>
+                                    <mainClass>ansrs.ansrs</mainClass>
                                 </transformer>
                             </transformers>
                             <filters>

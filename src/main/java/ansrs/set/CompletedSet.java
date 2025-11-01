@@ -1,6 +1,7 @@
-package dev.sai.srs.set;
+package ansrs.set;
 
-import dev.sai.srs.data.Item;
+import ansrs.data.Item;
+import ansrs.util.Log;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -36,34 +37,34 @@ public class CompletedSet {
             writer.write(String.valueOf(0));
             writer.newLine();
         } catch (IOException e) {
-            throw new RuntimeException("Error: CompletedSet Creation Failed");
+            throw new RuntimeException(Log.errorMsg("Error: CompletedSet Creation Failed"));
         }
     }
 
     private void loadSet(Path setPath) {
         try {
             List<String> lines = Files.readAllLines(setPath);
-            if (lines.size() < 2) throw new RuntimeException("CompletedSet Malformed: Too few lines");
+            if (lines.size() < 2) throw new RuntimeException(Log.errorMsg("CompletedSet Malformed: Too few lines"));
             setDate = LocalDate.parse(lines.getFirst());
             for (int i = 2; i < lines.size(); i++) {
                 String line = lines.get(i).trim();
                 if (!line.isEmpty()) {
                     String[] itemHolder = line.split(" ");
-                    if (itemHolder.length != 3) throw new RuntimeException("CompletedSet Item Malformed: Not enough data");
+                    if (itemHolder.length != 3) throw new RuntimeException(Log.errorMsg("CompletedSet Item Malformed: Not enough data"));
                     try{
                        items.put(Integer.parseInt(itemHolder[0]),
                                new Pair<Item.Pool, LocalDate>(
                                        itemHolder[1].equals("null")?null: Item.Pool.valueOf(itemHolder[1].toUpperCase()),
                                        LocalDate.parse(itemHolder[2])));
                     } catch (IllegalArgumentException e){
-                        throw new RuntimeException("CompletedSet Item Malformed: Pool Value Invalid");
+                        throw new RuntimeException(Log.errorMsg("CompletedSet Item Malformed: Pool Value Invalid"));
                     } catch (DateTimeParseException e){
-                        throw new RuntimeException("CompletedSet Item Malformed: Date unparsable");
+                        throw new RuntimeException(Log.errorMsg("CompletedSet Item Malformed: Date unparsable"));
                     }
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException("Error loading set");
+            throw new RuntimeException(Log.errorMsg("Error loading set"));
         }
     }
 
@@ -74,7 +75,7 @@ public class CompletedSet {
             writer.write(String.valueOf(items.size()));
             writer.newLine();
             for (Map.Entry<Integer, Pair<Item.Pool, LocalDate>> e : items.entrySet()) {
-                if (e.getValue()==null || e.getValue().getLast_recall()==null) throw new RuntimeException("CompletedSet Object Malformed");
+                if (e.getValue()==null || e.getValue().getLast_recall()==null) throw new RuntimeException(Log.errorMsg("CompletedSet Object Malformed"));
                 String pid = String.valueOf(e.getKey());
                 String pool = (e.getValue().getPool()==null) ? "null" :e.getValue().getPool().name();
                 String date = e.getValue().getLast_recall().toString();
@@ -82,7 +83,7 @@ public class CompletedSet {
                 writer.newLine();
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(Log.errorMsg(e.getMessage()));
         }
     }
 

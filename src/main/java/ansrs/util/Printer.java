@@ -1,9 +1,9 @@
-package dev.sai.srs.printer;
+package ansrs.util;
 
-import dev.sai.srs.data.Item;
-import dev.sai.srs.set.CompletedSet;
-import dev.sai.srs.set.WorkingSet;
-import dev.sai.srs.db.DBManager;
+import ansrs.data.Item;
+import ansrs.set.CompletedSet;
+import ansrs.set.WorkingSet;
+import ansrs.db.DBManager;
 
 import java.util.List;
 import java.util.Optional;

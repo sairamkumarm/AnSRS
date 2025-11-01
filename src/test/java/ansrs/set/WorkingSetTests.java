@@ -1,6 +1,7 @@
-package dev.sai.srs.set;
+package ansrs.set;
 
 
+import ansrs.util.Log;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +26,7 @@ public class WorkingSetTests {
 //            System.out.println(srsDir.toString());
             Files.createDirectories(srsDir);
         } catch (IOException e){
-            throw new RuntimeException(e);
+            throw new RuntimeException(Log.errorMsg(e.getMessage()));
         }
         workingSetTestPath = srsDir.resolve("test_working.set");
         testWorkingSet = new WorkingSet(workingSetTestPath);
@@ -39,7 +40,7 @@ public class WorkingSetTests {
                 Files.delete(srsDir);
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(Log.errorMsg(e.getMessage()));
         }
     }
 
@@ -53,14 +54,14 @@ public class WorkingSetTests {
         List<Integer> items = new ArrayList<>();
         try{
             List<String> lines = Files.readAllLines(workingSetTestPath);
-            if(lines.size() <2) throw new RuntimeException("Set File Contents Malformed");
+            if(lines.size() <2) throw new RuntimeException(Log.errorMsg("Set File Contents Malformed"));
             Assertions.assertEquals(LocalDate.now(), LocalDate.parse(lines.getFirst()));
             for(int i=2; i< lines.size(); i++){
                 String line = lines.get(i).trim();
                 if(!line.isEmpty()) items.add(Integer.parseInt(line));
             }
         } catch (IOException e){
-            throw new RuntimeException("Error loading set");
+            throw new RuntimeException(Log.errorMsg("Error loading set"));
         }
         Assertions.assertEquals(0,items.size());
     }
@@ -78,7 +79,7 @@ public class WorkingSetTests {
             if(testWorkingSet.getItemIdList().size() != Integer.parseInt(lines.get(1).trim())) return false;
             if(!testWorkingSet.getItemIdList().equals(items)) return false;
         } catch (IOException e){
-            throw new RuntimeException("Error loading set");
+            throw new RuntimeException(Log.errorMsg("Error loading set"));
         }
         return true;
     }

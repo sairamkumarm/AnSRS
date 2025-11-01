@@ -1,4 +1,6 @@
-package dev.sai.srs.set;
+package ansrs.set;
+
+import ansrs.util.Log;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -33,21 +35,21 @@ public class WorkingSet {
             writer.write(String.valueOf(0));
             writer.newLine();
         } catch (IOException e) {
-            throw new RuntimeException("Error Creating Set");
+            throw new RuntimeException(Log.errorMsg("Error Creating Set"));
         }
     }
 
     private void loadSet(Path setPath) {
         try {
             List<String> lines = Files.readAllLines(setPath);
-            if (lines.size() < 2) throw new RuntimeException("Set File Contents Malformed");
+            if (lines.size() < 2) throw new RuntimeException(Log.errorMsg("Set File Contents Malformed"));
             setDate = LocalDate.parse(lines.getFirst());
             for (int i = 2; i < lines.size(); i++) {
                 String line = lines.get(i).trim();
                 if (!line.isEmpty()) itemIds.add(Integer.parseInt(line));
             }
         } catch (IOException e) {
-            throw new RuntimeException("Error loading set");
+            throw new RuntimeException(Log.errorMsg("Error loading set"));
         }
     }
 
@@ -94,7 +96,7 @@ public class WorkingSet {
                 writer.newLine();
             }
         } catch (IOException e) {
-            throw new RuntimeException("Error Updating Set");
+            throw new RuntimeException(Log.errorMsg("Error Updating Set"));
         }
     }
 

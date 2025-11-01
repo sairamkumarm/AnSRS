@@ -1,7 +1,9 @@
-package dev.sai.srs.service;
+package ansrs.service;
 
-import dev.sai.srs.data.Item;
-import dev.sai.srs.db.DBManager;
+import ansrs.data.Item;
+import ansrs.db.DBManager;
+import ansrs.util.Log;
+
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -35,7 +37,7 @@ public class RecallService {
 
     private void loadQueue(DBManager dbManager){
         Optional<List<Item>> list = dbManager.getAllItems();
-        if (list.isEmpty()) throw new RuntimeException("Invalid recall attempt");
+        if (list.isEmpty()) throw new RuntimeException(Log.errorMsg("Invalid recall attempt"));
         for (Item p: list.get()) itemQueue.add(p);
     }
 
