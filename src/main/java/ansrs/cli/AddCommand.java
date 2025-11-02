@@ -35,10 +35,10 @@ public class AddCommand implements Runnable {
     @Option(names = {"-u", "--update"}, description = "To be used while updating an existing item", required = false)
     private boolean update;
 
-    @Option(names = "--last-recall", paramLabel = "ITEM_LAST_RECALL", description = "Set a custom last recall date, by default it is set to today.", required = false)
+    @Option(names = "--last-recall", paramLabel = "ITEM_LAST_RECALL", description = "Set an optional custom last recall date, by default it is set to today.", required = false)
     private String itemLastRecall;
 
-    @Option(names = "--total-recalls", paramLabel = "ITEM_TOTAL_RECALL", description = "Set a custom total recall count, by default it is set to 0", required = false, defaultValue = "-12341234")
+    @Option(names = "--total-recalls", paramLabel = "ITEM_TOTAL_RECALL", description = "Set an optional custom total recall count, by default it is set to 0", required = false, defaultValue = "-12341234")
     private int totalRecalls;
 
     @Override

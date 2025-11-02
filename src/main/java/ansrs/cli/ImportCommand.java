@@ -21,7 +21,7 @@ import java.util.Set;
         ITEM_NAME: Non-empty String
         ITEM_LINK: Non-empty String starting with 'https://'
         ITEM_POOL: Non-empty value belonging and limited to [H, M, L]
-        ITEM_LAST_RECALL: Date string of format YYYY-MM-DD, or leave empty for today's date.
+        ITEM_LAST_RECALL: Date string of format YYYY-MM-DD, or cannot be in the future, leave empty for today's date.
         ITEM_TOTAL_RECALLS: Integer >= 0
         """,
         mixinStandardHelpOptions = true)

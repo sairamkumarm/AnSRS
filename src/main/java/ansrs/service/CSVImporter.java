@@ -5,6 +5,7 @@ import ansrs.util.Log;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 
+import java.awt.event.FocusEvent;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
@@ -75,7 +76,7 @@ public class CSVImporter {
             if (!sanitize(record.get(4)).isEmpty()) lastRecall = LocalDate.parse(sanitize(record.get(4)));
             int totalRecalls =0;
             if (!sanitize(record.get(5)).isEmpty()) totalRecalls = Integer.parseInt(sanitize(record.get(5)));
-            if (id <= 0 || name.isEmpty() || !link.startsWith("https://") || totalRecalls < 0) {
+            if (id <= 0 || name.isEmpty() || !link.startsWith("https://") || totalRecalls < 0 || lastRecall.isAfter(LocalDate.now())) {
                 return Optional.empty();
             }
             return Optional.of(new Item(id, name, link, pool, lastRecall, totalRecalls));
