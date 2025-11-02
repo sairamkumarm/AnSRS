@@ -35,41 +35,43 @@ public class DeleteCommand implements Runnable {
         if (!sure) {
             throw new ParameterException(spec.commandLine(), Log.errorMsg("--sure flag is needed to perform deletions."));
         }
-        if (itemId==0){
+        if (itemId == 0) {
             if (reset) {
                 if (
-                parent.db.clearDatabase()&&
-                parent.completedSet.clearSet()&&
-                parent.workingSet.clearSet()
+                        parent.db.clearDatabase() &&
+                                parent.completedSet.clearSet() &&
+                                parent.workingSet.clearSet()
                 )
                     Log.info("Reset successful");
-                else Log.error("Reset failed");
+                else Log.error("Complete Reset failed, use --debug flag");
                 return;
-            }
-            else throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID can be skipped only during the --reset command"));
+            } else
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID can be skipped only during the --hard-reset command"));
         }
 
         if (itemId < 0) {
-            throw new ParameterException(spec.commandLine(),Log.errorMsg("ITEM_ID ["+itemId+"] cannot be non-positive"));
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID [" + itemId + "] cannot be non-positive"));
         }
         if (deleteFromDatabase) {
             if (!parent.db.deleteItemsById(itemId)) {
-                Log.error("Error in deleting ITEM_ID ["+itemId+"] from DB, use --debug to confirm its existence");
+                Log.error("Error in deleting ITEM_ID [" + itemId + "] from DB, use --debug to confirm its existence");
                 return;
             }
-            Log.info("ITEM_ID ["+itemId+"] deleted from database");
-        }
-        if (deleteFromCompletedSet) {
+            boolean cs = parent.completedSet.removeItem(itemId);
+            boolean ws = parent.workingSet.removeItem(itemId);
+            Log.info("ITEM_ID [" + itemId + "] deleted from the database" + ((cs)?", and the CompletedSet.":"") + ((ws)?", and the WorkingSet.":"")+((!ws&&!cs)?".":""));
+        } else if (deleteFromCompletedSet) {
             if (!parent.completedSet.removeItem(itemId)) {
-                throw new ParameterException(spec.commandLine(),Log.errorMsg("ITEM_ID ["+itemId+"] non-existent in CompletedSet"));
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID [" + itemId + "] non-existent in CompletedSet"));
             } else {
-                Log.info("ITEM_ID ["+itemId+"] deleted from CompletedSet");
+                Log.info("ITEM_ID [" + itemId + "] deleted from CompletedSet");
             }
-        }
-        if (!parent.workingSet.removeItem(itemId)) {
-            throw new ParameterException(spec.commandLine(),Log.errorMsg("ITEM_ID ["+itemId+"] non-existent in WorkingSet"));
         } else {
-            Log.info("ITEM_ID ["+itemId+"] deleted from WorkingSet");
+            if (!parent.workingSet.removeItem(itemId)) {
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID [" + itemId + "] non-existent in WorkingSet"));
+            } else {
+                Log.info("ITEM_ID [" + itemId + "] deleted from WorkingSet");
+            }
         }
 
         if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
