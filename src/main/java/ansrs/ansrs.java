@@ -7,8 +7,12 @@ import ansrs.db.DBManager;
 import ansrs.util.Log;
 import picocli.CommandLine;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class ansrs {
 
@@ -26,23 +30,43 @@ public class ansrs {
     }
 
     public static void main(String[] args) {
+//        try {
+//            System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
+//            System.setErr(new PrintStream(System.err, true, StandardCharsets.UTF_8));
+//
+//            if (System.console() != null) {
+//                // Try to set console encoding if available
+//                Field f = System.console().getClass().getDeclaredField("cs");
+//                f.setAccessible(true);
+//                f.set(System.console(), StandardCharsets.UTF_8);
+//            }
+//        } catch (Exception e) {
+//            // Ignore, use default encoding
+//        }
         try {
+
             Files.createDirectories(srsDir);
 
             WorkingSet workingSet = new WorkingSet(workingSetPath);
             CompletedSet completedSet = new CompletedSet(completedSetPath);
             DBManager db = new DBManager(databasePath);
             if(args.length==0){
-            System.out.println("""
-                    \u001B[32m
-                     ██████╗         ████████╗███████╗ ████████╗
-                    ██╔═══██╗        ██╔═════╝██╔═══██╗██╔═════╝
-                    ████████║██████╗ ████████╗███████╔╝████████╗
-                    ██╔═══██║██╔══██╗╚═════██║██╔═══██╗╚═════██║
-                    ██║   ██║██║  ██║████████║██║   ██║████████║
-                    ╚═╝   ╚═╝╚═╝  ╚═╝╚═══════╝╚═╝   ╚═╝╚═══════╝
-                    ══════ANOTHER SPACED REPETITION SYSTEM══════
-                    \u001B[0m\s
+
+            String banner = """
+                     $$$$$$\\             $$$$$$\\  $$$$$$$\\   $$$$$$\\ \s
+                    $$  __$$\\           $$  __$$\\ $$  __$$\\ $$  __$$\\\s
+                    $$ |  $$ |$$$$$$$\\  $$ |  \\__|$$ |  $$ |$$ |  \\__|
+                    $$$$$$$$ |$$  __$$\\ \\$$$$$$\\  $$$$$$$  |\\$$$$$$\\ \s
+                    $$  __$$ |$$ |  $$ | \\____$$\\ $$  __$$<  \\____$$\\\s
+                    $$ |  $$ |$$ |  $$ |$$\\   $$ |$$ |  $$ |$$\\   $$ |
+                    $$ |  $$ |$$ |  $$ |\\$$$$$$  |$$ |  $$ |\\$$$$$$  |
+                    \\__|  \\__|\\__|  \\__| \\______/ \\__|  \\__| \\______/
+                    ========ANOTHER SPACED REPETITION SYSTEM==========
+                    """;
+
+                String coloredBanner = colorizeBanner(banner);
+                System.out.println(coloredBanner);
+                System.out.println("""
                     AnSRS Version 1.0.0
                     Author: Sairamkumar M
                     Email: sairamkumar.m@outlook.com
@@ -80,5 +104,28 @@ public class ansrs {
         } catch (Exception e) {
             throw new RuntimeException(Log.errorMsg( e.getMessage()));
         }
+    }
+
+    public static String colorizeBanner(String banner) {
+        // ANSI codes
+        String foreground = "\u001B[97m";  // Bright white
+        String background = "\u001B[107m";
+        String reset = "\u001B[0m";
+        String accent = "\u001B[92m";
+        String blackBg = "\u001B[40m";
+        // Colorize only the $ characters with white foreground and specified background
+        banner =  banner.replace("$", foreground + background + "$" + reset)
+                .replace("\\", accent + blackBg+ "\\" + reset)
+                .replace("/", accent + blackBg+ "/" + reset)
+                .replace("_", accent + blackBg+ "_" + reset)
+                .replace("|", accent + blackBg+ "|" + reset)
+                .replace("<", accent + blackBg+ "<" + reset)
+                .replace(" ", accent + blackBg+ " " + reset)
+                .replace("=", accent + blackBg+ "=" + reset);
+        for (char c ='A'; c<='Z'; c++){
+            String letter = String.valueOf(c);
+            banner = banner.replace(letter, accent+blackBg+letter+reset);
+        }
+        return banner;
     }
 }
