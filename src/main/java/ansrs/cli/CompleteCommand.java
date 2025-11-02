@@ -47,7 +47,7 @@ public class CompleteCommand implements Runnable {
                 parent.workingSet.removeItem(id);
             }
             Log.info("All items in WorkingSet completed.");
-            if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+            if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
             return;
         }
 
@@ -71,7 +71,7 @@ public class CompleteCommand implements Runnable {
             }
         }
         Log.info("Completed ITEM_ID [" + itemId + "]" + ((pool != null) ? (", and moved item to ITEM_POOL[" + pool.name() + "]") : "") + ((!lastRecall.equals(LocalDate.now()))?", with ITEM_LAST_RECALL["+lastRecall.toString()+"]":""));
-        if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+        if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
 
     }
 

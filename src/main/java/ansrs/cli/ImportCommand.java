@@ -63,7 +63,7 @@ public class ImportCommand implements Runnable {
                 if (success) Log.info("Import success: Merged " + items.size() + " Valid Rows to database");
                 else Log.error("Import failed");
             }
-            if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+            if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
         } catch (ParameterException e) {
             throw e;
         } catch (Exception e) {

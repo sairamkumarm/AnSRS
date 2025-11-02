@@ -43,7 +43,7 @@ public class DeleteCommand implements Runnable {
                                 parent.workingSet.clearSet()
                 )
                     Log.info("Reset successful");
-                else Log.error("Complete Reset failed, use --debug flag");
+                else Log.error("Complete Reset failed, use --list flag to check status");
                 return;
             } else
                 throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID can be skipped only during the --hard-reset command"));
@@ -54,7 +54,7 @@ public class DeleteCommand implements Runnable {
         }
         if (deleteFromDatabase) {
             if (!parent.db.deleteItemsById(itemId)) {
-                Log.error("Error in deleting ITEM_ID [" + itemId + "] from DB, use --debug to confirm its existence");
+                Log.error("Error in deleting ITEM_ID [" + itemId + "] from DB, use --list to confirm its existence");
                 return;
             }
             boolean cs = parent.completedSet.removeItem(itemId);
@@ -74,7 +74,7 @@ public class DeleteCommand implements Runnable {
             }
         }
 
-        if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+        if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
 
     }
 

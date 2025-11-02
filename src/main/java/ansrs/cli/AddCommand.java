@@ -64,7 +64,7 @@ public class AddCommand implements Runnable {
             Log.error(e.getMessage());
             return;
         }
-        if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+        if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
     }
 
     private void validate() {

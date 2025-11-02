@@ -4,9 +4,9 @@ import ansrs.set.WorkingSet;
 import ansrs.set.CompletedSet;
 import ansrs.db.DBManager;
 import ansrs.util.Printer;
-import picocli.CommandLine;
+import picocli.CommandLine.*;
 
-@CommandLine.Command(name = "ansrs",
+@Command(name = "ansrs",
         description = "AnSRS (Pronounced \"Answers\") is a spaced repetition system.", version = """
         AnSRS version 1.0.0 2025-11-01
         """,
@@ -24,13 +24,11 @@ public class SRSCommand implements Runnable{
         this.db = DBManager;
     }
 
-    @CommandLine.Option(names = {"-d", "--debug"}, description = "Prints set and db state", required = false)
-    public boolean debug;
+    @Option(names = {"-l", "--list"}, description = "Lists set and db state", required = false)
+    public boolean list;
 
     @Override
     public void run() {
-        // TODO: standardize logging
-        // TODO: make welcome screen with state print on root command
-        if(debug) Printer.statePrinter(workingSet, completedSet,db);
+       if(list) Printer.statePrinter(workingSet, completedSet,db);
     }
 }

@@ -39,7 +39,7 @@ public class RollbackCommand implements Runnable {
                 Log.info("Item [" + itemId + "] rollback complete.");
             else Log.error("Item [" + itemId + "] rollback failed.");
         }
-        if (parent.debug) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+        if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
     }
 
     private void validate() {
