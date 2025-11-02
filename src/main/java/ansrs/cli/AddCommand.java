@@ -7,6 +7,7 @@ import ansrs.util.Printer;
 import picocli.CommandLine.*;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 @Command(name = "add",
         description = "Add new items into the item database or update an existing one",
@@ -34,21 +35,31 @@ public class AddCommand implements Runnable {
     @Option(names = {"-u", "--update"}, description = "To be used while updating an existing item", required = false)
     private boolean update;
 
+    @Option(names = "--last-recall", paramLabel = "ITEM_LAST_RECALL", description = "Set a custom last recall date, by default it is set to today.", required = false)
+    private String itemLastRecall;
+
+    @Option(names = "--total-recalls", paramLabel = "ITEM_TOTAL_RECALL", description = "Set a custom total recall count, by default it is set to 0", required = false, defaultValue = "-12341234")
+    private int totalRecalls;
+
     @Override
     public void run() {
         validate();
         Item.Pool poolEnum = Item.Pool.valueOf(itemPool.toUpperCase());
-        Item item = new Item(itemId, itemName, itemLink, poolEnum, LocalDate.now(), 0);
+        LocalDate lastRecall = LocalDate.now();
+        int recalls=0;
+        if (itemLastRecall !=null && !itemLastRecall.isBlank()) lastRecall=LocalDate.parse(itemLastRecall);
+        if (totalRecalls!=-12341234)  recalls=totalRecalls;
+        Item item = new Item(itemId, itemName, itemLink, poolEnum, lastRecall, recalls);
         try {
             if (!parent.db.insertItem(item)) {
                 if (update) {
-                    if (!parent.db.updateItem(item)) Log.error("Update Failed");
+                    if (!parent.db.updateItem(item)) Log.error("Update Failed: "+item);
                 } else {
-                    Log.error("Insert failed");
+                    Log.error("Insert failed, check for duplicate ID: " + item);
                     return;
                 }
             }
-            Log.info("Successfully added item");
+            Log.info("Successfully added: " + item);
         } catch (Exception e) {
             Log.error(e.getMessage());
             return;
@@ -67,6 +78,18 @@ public class AddCommand implements Runnable {
             Item.Pool.valueOf(itemPool.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new ParameterException(spec.commandLine(), Log.errorMsg("Invalid pool value, pick between H, M and L"));
+        }
+        if (itemLastRecall !=null && !itemLastRecall.isBlank()){
+            try {
+                LocalDate date = LocalDate.parse(itemLastRecall.trim());
+                if (date.isAfter(LocalDate.now())) throw new ParameterException(spec.commandLine(), "ITEM_LAST_RECALL cannot be in the future. \nNOTE: If you are adding an Item to the db for safe keeping, leave --last-recall blank, it will initialize with today's date.");
+            } catch (DateTimeParseException e){
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("Invalid ITEM_LAST_RECALL, use YYYY-MM-DD format."));
+            }
+        }
+        if (totalRecalls != -12341234){
+            if (totalRecalls < 0)
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("Invalid ITEM_TOTAL_RECALLS value, ITEM_TOTAL_RECALLS value must be positive"));
         }
     }
 }
