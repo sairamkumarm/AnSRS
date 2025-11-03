@@ -16,13 +16,13 @@ Author: Sairamkumar M
 Email: sairamkumar.m@outlook.com
 Github: https://github.com/sairamkumarm/AnSRS
 
-ansrs is a command-line spaced repetition system designed for quick item tracking and recall scheduling.
-It uses a lightweight local database to manage three sets: working, completed, and recall.
-The system supports a jump-start feature that allows new users to begin recall sessions
-immediately using predefined items, bypassing the usual initialization delay.
+ansrs is a command-line spaced repetition system designed for quick item tracking and recall
+scheduling. It uses a lightweight local database to manage three sets: working, completed,
+and recall. The system supports a jump-start feature that allows new users to begin recall
+sessions immediately using predefined items, bypassing the usual initialization delay.
 
-The tool is currently built for Windows only and compiled into a native binary for zero-dependency execution.
-Linux support can be added easily, but testing is pending.
+The tool is currently built for Windows only and compiled into a native binary for
+zero-dependency execution. Linux support can be added easily, but testing is pending.
 
 Usage: ansrs [-hlsV] [-i=ITEM_ID] [COMMAND]
 
