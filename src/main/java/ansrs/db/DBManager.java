@@ -28,6 +28,12 @@ public class DBManager implements AutoCloseable {
         }
     }
 
+    //test purpose only
+    public DBManager(String mockTestDBNameAndPath) throws SQLException {
+        connection = DriverManager.getConnection("jdbc:h2:"+ mockTestDBNameAndPath, "ta","");
+        initTable();
+    }
+
     public void initTable() {
         try (PreparedStatement statement = connection.prepareStatement("""
                 CREATE TABLE IF NOT EXISTS items(

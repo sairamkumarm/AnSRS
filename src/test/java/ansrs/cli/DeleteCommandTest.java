@@ -1,0 +1,186 @@
+package ansrs.cli;
+
+import ansrs.db.DBManager;
+import ansrs.set.CompletedSet;
+import ansrs.set.WorkingSet;
+import org.junit.jupiter.api.*;
+import picocli.CommandLine;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class DeleteCommandTest {
+
+    private Path tempDir;
+    private WorkingSet workingSet;
+    private CompletedSet completedSet;
+    private DBManager db;
+    private SRSCommand parent;
+    private DeleteCommand cmd;
+    private CommandLine cmdLine;
+
+    @BeforeEach
+    void setup() throws Exception {
+        tempDir = Files.createTempDirectory("ansrs-test");
+        workingSet = spy(new WorkingSet(tempDir.resolve("working.set")));
+        completedSet = spy(new CompletedSet(tempDir.resolve("completed.set")));
+        db = mock(DBManager.class);
+
+        parent = new SRSCommand(workingSet, completedSet, db);
+        cmd = new DeleteCommand();
+        cmdLine = new CommandLine(cmd);
+        cmd.parent = parent;
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        db.close();
+        Files.walk(tempDir)
+                .sorted((a, b) -> b.compareTo(a))
+                .forEach(path -> {
+                    try {
+                        Files.deleteIfExists(path);
+                    } catch (Exception ignored) {}
+                });
+    }
+
+    // --- VALID CASES ---
+
+    @Test
+    void testDeleteFromWorkingSet() {
+        workingSet.addItem(1);
+        assertEquals(0, cmdLine.execute("1", "--sure"));
+        verify(workingSet).removeItem(1);
+    }
+
+    @Test
+    void testDeleteFromCompletedSet() {
+        completedSet.addItem(2, null);
+        assertEquals(0, cmdLine.execute("2", "--completed", "--sure"));
+        verify(completedSet).removeItem(2);
+    }
+
+    @Test
+    void testDeleteFromDatabaseAlsoRemovesFromSets() {
+        when(db.deleteItemsById(3)).thenReturn(true);
+        workingSet.addItem(3);
+        completedSet.addItem(3, null);
+        assertEquals(0, cmdLine.execute("3", "--database", "--sure"));
+        verify(db).deleteItemsById(3);
+        verify(workingSet).removeItem(3);
+        verify(completedSet).removeItem(3);
+    }
+
+    @Test
+    void testParentListTriggersPrinter() {
+        parent.list = true;
+        workingSet.addItem(5);
+        assertEquals(0, cmdLine.execute("5", "--sure"));
+        verify(workingSet).removeItem(5);
+    }
+
+    @Test
+    void testHardResetSuccess() {
+        when(db.clearDatabase()).thenReturn(true);
+        doReturn(true).when(completedSet).clearSet();
+        doReturn(true).when(workingSet).clearSet();
+
+        assertEquals(1, cmdLine.execute("--sure", "--hard-reset"));
+        verify(db).clearDatabase();
+        verify(workingSet).clearSet();
+        verify(completedSet).clearSet();
+    }
+
+    @Test
+    void testHardResetFailure() {
+        when(db.clearDatabase()).thenReturn(false);
+        assertEquals(1, cmdLine.execute("--sure", "--hard-reset"));
+    }
+
+    // --- VALIDATION FAILURES ---
+
+    @Test
+    void testMissingSureFlagThrows() {
+        workingSet.addItem(7);
+        assertEquals(2,
+                cmdLine.execute("7"));
+    }
+
+    @Test
+    void testNegativeItemId() {
+        assertEquals(2,
+                cmdLine.execute("-5", "--sure"));
+    }
+
+    @Test
+    void testItemIdZeroWithoutResetThrows() {
+        assertEquals(2,
+                cmdLine.execute("0", "--sure"));
+    }
+
+    @Test
+    void testCompletedSetDeletionOfNonExistentItemThrows() {
+        assertEquals(2,
+                cmdLine.execute("10", "--completed", "--sure"));
+    }
+
+    @Test
+    void testWorkingSetDeletionOfNonExistentItemThrows() {
+        assertEquals(2,
+                cmdLine.execute("11", "--sure"));
+    }
+
+    @Test
+    void testDatabaseDeletionFailureReturnsOne() {
+        when(db.deleteItemsById(12)).thenReturn(false);
+        assertEquals(1, cmdLine.execute("12", "--database", "--sure"));
+    }
+
+    @Test
+    void testHardResetWithoutSureThrows() {
+        assertEquals(2,
+                cmdLine.execute("--hard-reset"));
+    }
+
+    // --- EDGE CASES ---
+
+    @Test
+    void testDatabaseDeletionWithMissingSets() {
+        when(db.deleteItemsById(15)).thenReturn(true);
+        doReturn(false).when(workingSet).removeItem(15);
+        doReturn(false).when(completedSet).removeItem(15);
+
+        assertEquals(0, cmdLine.execute("15", "--database", "--sure"));
+        verify(db).deleteItemsById(15);
+    }
+
+    @Test
+    void testHardResetAlsoClearsPartial() {
+        when(db.clearDatabase()).thenReturn(true);
+        doReturn(true).when(workingSet).clearSet();
+        doReturn(false).when(completedSet).clearSet();
+
+        assertEquals(1, cmdLine.execute("--sure", "--hard-reset"));
+        verify(db).clearDatabase();
+    }
+
+//    @Test
+//    void testDeletionStillWorksIfWorkingSetThrows() {
+//        workingSet.addItem(20);
+//        doThrow(new RuntimeException("fail")).when(workingSet).removeItem(20);
+//        assertEquals(1,
+//                cmdLine.execute("20", "--sure"));
+//    }
+
+    @Test
+    void testMultipleDeletesSequentially() {
+        workingSet.fillSet(Set.of(30, 31));
+        assertEquals(0, cmdLine.execute("30", "--sure"));
+        assertEquals(0, cmdLine.execute("31", "--sure"));
+        verify(workingSet, times(2)).removeItem(anyInt());
+    }
+}

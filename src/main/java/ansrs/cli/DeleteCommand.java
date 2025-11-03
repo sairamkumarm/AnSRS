@@ -12,10 +12,10 @@ import java.util.concurrent.Callable;
 public class DeleteCommand implements Callable<Integer> {
 
     @ParentCommand
-    private SRSCommand parent;
+    SRSCommand parent;
 
     @Spec
-    private Model.CommandSpec spec;
+    Model.CommandSpec spec;
 
     @Parameters(index = "0", paramLabel = "ITEM_ID", description = "Unique identifier of an item", defaultValue = "0")
     private int itemId;

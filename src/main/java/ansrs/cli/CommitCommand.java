@@ -18,10 +18,10 @@ import java.util.concurrent.Callable;
 public class CommitCommand implements Callable<Integer> {
 
     @Spec
-    private Model.CommandSpec spec;
+    Model.CommandSpec spec;
 
     @ParentCommand
-    private SRSCommand parent;
+    SRSCommand parent;
 
     @Option(names = {"-f","--force"}, description = "allows you to commit when there are pending items in the WorkingSet")
     private boolean force;

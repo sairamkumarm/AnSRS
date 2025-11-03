@@ -29,10 +29,10 @@ import java.util.concurrent.Callable;
 public class ImportCommand implements Callable<Integer> {
 
     @Spec
-    private Model.CommandSpec spec;
+    Model.CommandSpec spec;
 
     @ParentCommand
-    private SRSCommand parent;
+    SRSCommand parent;
 
     @Option(names = "--path", paramLabel = "CSV_FILE_PATH", description = "Path to the csv file", required = true)
     private String filePath;

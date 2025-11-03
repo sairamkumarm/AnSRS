@@ -15,10 +15,10 @@ import java.util.concurrent.Callable;
 public class RollbackCommand implements Callable<Integer> {
 
     @Spec
-    private Model.CommandSpec spec;
+    Model.CommandSpec spec;
 
     @ParentCommand
-    private SRSCommand parent;
+    SRSCommand parent;
 
     @Parameters(paramLabel = "ITEM_ID", description = "Unique identifier of an item", defaultValue = "0")
     private int itemId;

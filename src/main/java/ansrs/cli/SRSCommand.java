@@ -7,6 +7,8 @@ import ansrs.util.Log;
 import ansrs.util.Printer;
 import picocli.CommandLine.*;
 
+import java.util.concurrent.Callable;
+
 @Command(name = "ansrs",
         description = "AnSRS (Pronounced \"Answers\") is a spaced repetition system.", version = """
         AnSRS version 1.0.0 2025-11-01
@@ -14,7 +16,7 @@ import picocli.CommandLine.*;
         mixinStandardHelpOptions = true,
         subcommands = {AddCommand.class, CompleteCommand.class, DeleteCommand.class,
                 CommitCommand.class, RecallCommand.class, RollbackCommand.class, ImportCommand.class})
-public class SRSCommand implements Runnable{
+public class SRSCommand implements Callable<Integer> {
     public final WorkingSet workingSet;
     public final CompletedSet completedSet;
     public final DBManager db;
@@ -38,7 +40,7 @@ public class SRSCommand implements Runnable{
     public int itemId;
 
     @Override
-    public void run() {
+    public Integer call(){
         validate();
         if (itemId!=-12341234){
             System.out.println("Item:");
@@ -51,6 +53,7 @@ public class SRSCommand implements Runnable{
                Printer.statePrinter(workingSet, completedSet,db);
            }
        }
+       return 0;
     }
 
     private void validate(){

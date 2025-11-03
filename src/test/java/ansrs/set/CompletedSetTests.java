@@ -83,7 +83,7 @@ public class CompletedSetTests {
                     Item.Pool pool = temp[1].equals("null") ? null : Item.Pool.valueOf(temp[1].toUpperCase());
                     LocalDate date = LocalDate.parse(temp[2]);
                     fileItems.put(pid, new CompletedSet.Pair<>(pool, date));
-                    System.out.println(fileItems.get(pid) + "  " +(setItems.get(pid)));
+//                    System.out.println(fileItems.get(pid) + "  " +(setItems.get(pid)));
                     CompletedSet.Pair<Item.Pool, LocalDate> f = fileItems.get(pid);
                     CompletedSet.Pair<Item.Pool, LocalDate> s = setItems.get(pid);
                     if (!Objects.equals(f.getPool(), s.getPool()) || !Objects.equals(f.getLast_recall(), s.getLast_recall())) return false;

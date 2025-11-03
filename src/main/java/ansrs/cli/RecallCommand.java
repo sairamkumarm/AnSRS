@@ -1,6 +1,7 @@
 package ansrs.cli;
 
 import ansrs.data.Item;
+import ansrs.db.DBManager;
 import ansrs.util.Log;
 import ansrs.util.Printer;
 import ansrs.service.RecallService;
@@ -16,10 +17,10 @@ import java.util.concurrent.Callable;
 public class RecallCommand implements Callable<Integer> {
 
     @ParentCommand
-    private SRSCommand parent;
+    SRSCommand parent;
 
     @Spec
-    private Model.CommandSpec spec;
+    Model.CommandSpec spec;
 
     @Parameters(index = "0", paramLabel = "RECALL_COUNT", description = "The amount of items to load into WorkingSet for recall")
     private int recallCount;
@@ -33,7 +34,7 @@ public class RecallCommand implements Callable<Integer> {
     @Override
     public Integer call(){
         if (recallCount <= 0) throw new ParameterException(spec.commandLine(), Log.errorMsg("Recall count cannot be non-positive"));
-        RecallService recallService = new RecallService(parent.db);
+        RecallService recallService = createRecallService(parent.db);
         Set<Integer> workingSetItems = parent.workingSet.getItemIdSet();
         if (!workingSetItems.isEmpty()) {
             if (!force)
@@ -52,5 +53,9 @@ public class RecallCommand implements Callable<Integer> {
         Printer.printItemsList(list);
         if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
         return 0;
+    }
+
+    protected RecallService createRecallService(DBManager db) {
+        return new RecallService(db);
     }
 }

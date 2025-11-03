@@ -26,9 +26,9 @@ public class Printer {
         if (itemsList.isPresent()) {
             printItemsList(itemsList.get());
         } else {
-            System.out.println("+-----------------------+");
-            System.out.println("|   Database is empty   |");
-            System.out.println("+-----------------------+");
+            System.out.println(dim+"+-----------------------+");
+            System.out.println("|   "+reset+"Database is empty"+dim+"   |");
+            System.out.println("+-----------------------+"+reset);
         }
 
     }

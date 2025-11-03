@@ -5,7 +5,6 @@ import ansrs.util.Log;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 
-import java.awt.event.FocusEvent;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
@@ -17,6 +16,10 @@ public class CSVImporter {
 
     private final Reader reader;
 
+    Reader getReaderForTest() {
+        return reader;
+    }
+
     public CSVImporter(String filePath) {
         try {
             Path path = Path.of(filePath).toAbsolutePath().normalize();
@@ -24,6 +27,11 @@ public class CSVImporter {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(Log.errorMsg(e.getMessage()));
         }
+    }
+
+    //for tests only
+    public CSVImporter(Reader mockTestReader) {
+        this.reader = mockTestReader;
     }
 
     public List<Item> parse() {

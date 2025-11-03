@@ -49,7 +49,7 @@ public class RecallService {
 
     public List<Integer> recall(int x){
         List<Integer> res = new ArrayList<>();
-        while (x-->0 && !itemQueue.isEmpty()) res.add(itemQueue.poll().getItemId());
+        while (x-- >0 && !itemQueue.isEmpty()) res.add(itemQueue.poll().getItemId());
         return res;
     }
 
