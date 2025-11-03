@@ -9,14 +9,15 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 @Command(name = "complete",
         description = "Marks item as completed, and transfers them to the CompletedSet",
         mixinStandardHelpOptions = true)
-public class CompleteCommand implements Runnable {
+public class CompleteCommand implements Callable<Integer> {
 
     @ParentCommand
-    private SRSCommand parent;
+    SRSCommand parent;
 
     @Spec
     Model.CommandSpec spec;
@@ -37,18 +38,22 @@ public class CompleteCommand implements Runnable {
     private boolean allComplete;
 
     @Override
-    public void run() {
+    public Integer call() {
         validate();
 
         Set<Integer> workingSetItemIds = new HashSet<>(parent.workingSet.getItemIdSet());
         if (allComplete && itemId == 0) {
             for (int id : workingSetItemIds) {
-                parent.completedSet.addItem(id, null);
-                parent.workingSet.removeItem(id);
+
+                boolean cs = parent.completedSet.addItem(id, null);
+                boolean ws = parent.workingSet.removeItem(id);
+                if (!ws&&cs){
+                    Log.warn("ITEM_ID["+id+"] not completely transferred, use --list to verify");
+                }
             }
-            Log.info("All items in WorkingSet completed.");
+            Log.info("WorkingSet completed");
             if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
-            return;
+            return 0;
         }
 
         Item.Pool pool = (poolString != null) ? Item.Pool.valueOf(poolString.toUpperCase()) : null;
@@ -72,7 +77,7 @@ public class CompleteCommand implements Runnable {
         }
         Log.info("Completed ITEM_ID [" + itemId + "]" + ((pool != null) ? (", and moved item to ITEM_POOL[" + pool.name() + "]") : "") + ((!lastRecall.equals(LocalDate.now()))?", with ITEM_LAST_RECALL["+lastRecall.toString()+"]":""));
         if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
-
+        return 0;
     }
 
 

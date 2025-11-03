@@ -9,13 +9,9 @@ import ansrs.util.Printer;
 import picocli.CommandLine;
 
 import java.io.IOException;
-import java.io.PrintStream;
-import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class ansrs {
 
@@ -64,17 +60,14 @@ public class ansrs {
                             Email: sairamkumar.m@outlook.com
                             Github: https://github.com/sairamkumarm/AnSRS
                             
-                            Usage: ansrs [-dhV] [COMMAND]
+                            Usage: ansrs [-hlsV] [-i=ITEM_ID] [COMMAND]
                             
                             AnSRS (Pronounced "Answers") is a spaced repetition system.
-                            There are 3 Store of data here.
-                            A WorkingSet, where Items set for recall during a session are stored.
-                            A CompletedSet, where items recalled, are stored, waiting to be commited.
-                            A Database, where items are persisted for further recollection.
-                            
-                              -l, --list      Prints set and db state
-                              -h, --help      Show this help message and exit.
-                              -V, --version   Print version information and exit.
+                              -h, --help         Show this help message and exit.
+                              -i, --id=ITEM_ID   Print a specific Item
+                              -l, --list         Lists set and db state
+                              -s, --set          Use this flag with --list to print only set
+                              -V, --version      Print version information and exit.
                             Commands:
                               add       Add new items into the item database or update an existing one
                               complete  Marks item as completed, and transfers them to the CompletedSet
@@ -84,11 +77,11 @@ public class ansrs {
                               recall    Loads items from database into WorkingSet for recall
                               rollback  Rolls back items from completed state to WorkingSet state
                               import    Import a csv into the database.
-                            
+
                             """);
                 } else {
                     System.out.println("Current WorkingSet:");
-                    Printer.printItemsGrid(db.getItemsFromList(workingSet.getItemIdList()).orElse(new ArrayList<>()));
+                    Printer.printItemsList(db.getItemsFromList(workingSet.getItemIdList()).orElse(new ArrayList<>()));
                 }
             }
             SRSCommand root = new SRSCommand(workingSet, completedSet, db);

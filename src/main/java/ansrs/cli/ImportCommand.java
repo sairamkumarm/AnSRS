@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 @Command(name = "import", description = """
         Import a csv into the database.
@@ -25,7 +26,7 @@ import java.util.Set;
         ITEM_TOTAL_RECALLS: Integer >= 0
         """,
         mixinStandardHelpOptions = true)
-public class ImportCommand implements Runnable {
+public class ImportCommand implements Callable<Integer> {
 
     @Spec
     private Model.CommandSpec spec;
@@ -40,13 +41,14 @@ public class ImportCommand implements Runnable {
     private String overwrite;
 
     @Override
-    public void run() {
+    public Integer call() {
         validate();
         try {
             Log.info("Parsing CSV");
             CSVImporter csv = new CSVImporter(filePath);
             List<Item> items = csv.parse();
-            if (items.isEmpty()) throw new ParameterException(spec.commandLine(), Log.errorMsg("Import Failed: No Valid Rows"));
+            if (items.isEmpty())
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("Import Failed: No Valid Rows"));
             Set<Integer> dbItemsSet = parent.db.getAllItemsIds().orElse(new HashSet<>());
             boolean success = false;
             if (overwrite.equalsIgnoreCase("db")) {
@@ -55,29 +57,42 @@ public class ImportCommand implements Runnable {
                 if (!uniques.isEmpty()) success = parent.db.insertItemsBatch(uniques);
                 if (!duplicates.isEmpty()) Log.warn(duplicates.size() + " duplicate item(s)");
                 for (Item i : duplicates) Log.warn("Duplicate " + i.toString());
-                if (success) Log.info("Import success: Added " + uniques.size() + " Unique Rows to database");
-                else if (uniques.isEmpty()) Log.error("No Items to add to db");
+                if (success) {
+                    Log.info("Import success: Added " + uniques.size() + " Unique Rows to database");
+                    if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+                    return 0;
+                } else if (uniques.isEmpty()) Log.error("No Items to add to db");
                 else Log.error("Import failed");
             } else {
                 success = parent.db.upsertItemsBatch(items);
-                if (success) Log.info("Import success: Merged " + items.size() + " Valid Rows to database");
-                else Log.error("Import failed");
+                if (success) {
+                    Log.info("Import success: Merged " + items.size() + " Valid Rows to database");
+                    if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+                    return 0;
+                } else Log.error("Import failed");
             }
             if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+            return 1;
         } catch (ParameterException e) {
             throw e;
         } catch (Exception e) {
             Log.error("Import failed");
+            return 1;
         }
     }
 
     private void validate() {
-        if (filePath.isBlank()) throw new ParameterException(spec.commandLine(), Log.errorMsg("File path is required for import"));
-        if (!filePath.trim().endsWith(".csv")) throw new ParameterException(spec.commandLine(), Log.errorMsg("CSV file expected"));
+        if (filePath.isBlank())
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("File path is required for import"));
+        if (!filePath.trim().endsWith(".csv"))
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("CSV file expected"));
         Path path = Path.of(filePath).toAbsolutePath().normalize();
-        if (!Files.exists(path)) throw new ParameterException(spec.commandLine(), Log.errorMsg("Existing File required"));
-        if (!Files.isRegularFile(path)) throw new ParameterException(spec.commandLine(), Log.errorMsg("Regular file required"));
-        if (!Files.isReadable(path)) throw new ParameterException(spec.commandLine(), Log.errorMsg("File is not readable"));
+        if (!Files.exists(path))
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("Existing File required"));
+        if (!Files.isRegularFile(path))
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("Regular file required"));
+        if (!Files.isReadable(path))
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("File is not readable"));
         if (!overwrite.equalsIgnoreCase("csv") && !overwrite.equalsIgnoreCase("db"))
             throw new ParameterException(spec.commandLine(), Log.errorMsg("Pick either --overwrite=csv or --overwrite=db"));
     }

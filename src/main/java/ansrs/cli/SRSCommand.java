@@ -3,6 +3,7 @@ package ansrs.cli;
 import ansrs.set.WorkingSet;
 import ansrs.set.CompletedSet;
 import ansrs.db.DBManager;
+import ansrs.util.Log;
 import ansrs.util.Printer;
 import picocli.CommandLine.*;
 
@@ -24,11 +25,38 @@ public class SRSCommand implements Runnable{
         this.db = DBManager;
     }
 
+    @Spec
+    private Model.CommandSpec spec;
+
     @Option(names = {"-l", "--list"}, description = "Lists set and db state", required = false)
     public boolean list;
 
+    @Option(names = {"-s", "--set"}, description = "Use this flag with --list to print only set", required = false)
+    public boolean set;
+
+    @Option(names = {"-i", "--id"}, paramLabel = "ITEM_ID", description = "Print a specific Item", required = false, defaultValue = "-12341234")
+    public int itemId;
+
     @Override
     public void run() {
-       if(list) Printer.statePrinter(workingSet, completedSet,db);
+        validate();
+        if (itemId!=-12341234){
+            System.out.println("Item:");
+            Printer.printItem(db.getItemById(itemId).orElse(null));
+        }
+       if(list) {
+           if (set){
+               Printer.setStatePrinter(workingSet, completedSet, db);
+           } else {
+               Printer.statePrinter(workingSet, completedSet,db);
+           }
+       }
+    }
+
+    private void validate(){
+        if (itemId!=-12341234){
+            if (itemId<=0) throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID cannot be non-positive"));
+        }
+        if (set && !list) throw new ParameterException(spec.commandLine(), Log.errorMsg("--set is to be used along with --list, to display only Set statuses"));
     }
 }

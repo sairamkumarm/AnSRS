@@ -8,17 +8,18 @@ import picocli.CommandLine.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.concurrent.Callable;
 
 @Command(name = "add",
         description = "Add new items into the item database or update an existing one",
         mixinStandardHelpOptions = true)
-public class AddCommand implements Runnable {
+public class AddCommand implements Callable<Integer> {
 
     @Spec
-    private Model.CommandSpec spec;
+    Model.CommandSpec spec;
 
     @ParentCommand
-    private SRSCommand parent;
+    SRSCommand parent;
 
     @Parameters(index = "0", paramLabel = "ITEM_ID", description = "Unique identifier of an item")
     private int itemId;
@@ -42,7 +43,7 @@ public class AddCommand implements Runnable {
     private int totalRecalls;
 
     @Override
-    public void run() {
+    public Integer call() {
         validate();
         Item.Pool poolEnum = Item.Pool.valueOf(itemPool.toUpperCase());
         LocalDate lastRecall = LocalDate.now();
@@ -56,15 +57,17 @@ public class AddCommand implements Runnable {
                     if (!parent.db.updateItem(item)) Log.error("Update Failed: "+item);
                 } else {
                     Log.error("Insert failed, check for duplicate ID: " + item);
-                    return;
+                    return 1;
                 }
+            } else{
+                Log.info("Successfully added: " + item);
             }
-            Log.info("Successfully added: " + item);
         } catch (Exception e) {
             Log.error(e.getMessage());
-            return;
+            return 1;
         }
         if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+        return 0;
     }
 
     private void validate() {

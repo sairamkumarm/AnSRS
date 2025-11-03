@@ -9,9 +9,10 @@ import picocli.CommandLine.*;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.concurrent.Callable;
 
 @Command(name = "rollback", description = "Rolls back items from completed state to WorkingSet state", mixinStandardHelpOptions = true)
-public class RollbackCommand implements Runnable {
+public class RollbackCommand implements Callable<Integer> {
 
     @Spec
     private Model.CommandSpec spec;
@@ -26,20 +27,34 @@ public class RollbackCommand implements Runnable {
     private boolean all;
 
     @Override
-    public void run() {
+    public Integer call() {
         validate();
         if (all) {
             HashMap<Integer, CompletedSet.Pair<Item.Pool, LocalDate>> completedSetItems = parent.completedSet.getItems();
             if (parent.workingSet.fillSet(completedSetItems.keySet()) &&
-                            parent.completedSet.clearSet()) Log.info("Full rollback complete.");
-            else Log.error("Rollback failed.");
+                            parent.completedSet.clearSet()) {
+                Log.info("Full rollback complete.");
+                if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+                return 0;
+            }
+            else {
+                Log.error("Rollback failed.");
+                if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+                return 1;
+            }
         } else {
             if (parent.workingSet.addItem(itemId) &&
-                            parent.completedSet.removeItem(itemId))
+                            parent.completedSet.removeItem(itemId)){
                 Log.info("Item [" + itemId + "] rollback complete.");
-            else Log.error("Item [" + itemId + "] rollback failed.");
+                if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+                return 0;
+            }
+            else {
+                Log.error("Item [" + itemId + "] rollback failed.");
+                if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+                return 1;
+            }
         }
-        if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
     }
 
     private void validate() {

@@ -4,10 +4,12 @@ import ansrs.util.Log;
 import ansrs.util.Printer;
 import picocli.CommandLine.*;
 
+import java.util.concurrent.Callable;
+
 @Command(name = "delete",
         description = "Remove from WorkingSet, CompletedSet and db, depending on the flags, by default it removes from WorkingSet",
         mixinStandardHelpOptions = true)
-public class DeleteCommand implements Runnable {
+public class DeleteCommand implements Callable<Integer> {
 
     @ParentCommand
     private SRSCommand parent;
@@ -31,7 +33,7 @@ public class DeleteCommand implements Runnable {
     private boolean reset;
 
     @Override
-    public void run() {
+    public Integer call() {
         if (!sure) {
             throw new ParameterException(spec.commandLine(), Log.errorMsg("--sure flag is needed to perform deletions."));
         }
@@ -44,7 +46,7 @@ public class DeleteCommand implements Runnable {
                 )
                     Log.info("Reset successful");
                 else Log.error("Complete Reset failed, use --list flag to check status");
-                return;
+                return 1;
             } else
                 throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID can be skipped only during the --hard-reset command"));
         }
@@ -55,7 +57,7 @@ public class DeleteCommand implements Runnable {
         if (deleteFromDatabase) {
             if (!parent.db.deleteItemsById(itemId)) {
                 Log.error("Error in deleting ITEM_ID [" + itemId + "] from DB, use --list to confirm its existence");
-                return;
+                return 1;
             }
             boolean cs = parent.completedSet.removeItem(itemId);
             boolean ws = parent.workingSet.removeItem(itemId);
@@ -75,7 +77,7 @@ public class DeleteCommand implements Runnable {
         }
 
         if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
-
+        return 0;
     }
 
 }

@@ -10,11 +10,12 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 @Command(name = "commit",
         description = "Save completed items in WorkingSet to the database",
         mixinStandardHelpOptions = true)
-public class CommitCommand implements Runnable{
+public class CommitCommand implements Callable<Integer> {
 
     @Spec
     private Model.CommandSpec spec;
@@ -26,7 +27,7 @@ public class CommitCommand implements Runnable{
     private boolean force;
 
     @Override
-    public void run() {
+    public Integer call() {
         HashMap<Integer, CompletedSet.Pair<Item.Pool, LocalDate>> completedSetItems = parent.completedSet.getItems();
         if(completedSetItems.isEmpty()){
             throw new ParameterException(spec.commandLine(), Log.errorMsg("Nothing to commit"));
@@ -49,15 +50,15 @@ public class CommitCommand implements Runnable{
             item.setTotalRecalls(item.getTotalRecalls()+1);
             parent.completedSet.removeItem(item.getItemId());
         }
-//        System.out.println(dbItems);
         if (!parent.db.updateItemsBatch(dbItems)){
             Log.error("Commit Failed, rolling back");
             //rollback from Set items, not db, to preserve the null pools, that signify no change
             for (Map.Entry<Integer, CompletedSet.Pair<Item.Pool, LocalDate>> item: completedSetItems.entrySet()) parent.completedSet.addItem(item.getKey(), item.getValue().getPool(), item.getValue().getLast_recall());
             if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
-            return;
+            return 1;
         }
         Log.info("Commit success: "+ dbItems.size()+" items updated");
         if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+        return 0;
     }
 }

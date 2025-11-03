@@ -8,11 +8,12 @@ import picocli.CommandLine.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 @Command(name = "recall",
         description = "Loads items from database into WorkingSet for recall",
         mixinStandardHelpOptions = true)
-public class RecallCommand implements Runnable {
+public class RecallCommand implements Callable<Integer> {
 
     @ParentCommand
     private SRSCommand parent;
@@ -30,7 +31,7 @@ public class RecallCommand implements Runnable {
     private boolean append;
 
     @Override
-    public void run() {
+    public Integer call(){
         if (recallCount <= 0) throw new ParameterException(spec.commandLine(), Log.errorMsg("Recall count cannot be non-positive"));
         RecallService recallService = new RecallService(parent.db);
         Set<Integer> workingSetItems = parent.workingSet.getItemIdSet();
@@ -48,7 +49,8 @@ public class RecallCommand implements Runnable {
         parent.workingSet.fillSet(workingSetItems);
         Log.info(workingSetItems.size() + " items in WorkingSet");
         List<Item> list = parent.db.getItemsFromList(workingSetItems.stream().toList()).orElse(new ArrayList<>());
-        Printer.printItemsGrid(list);
+        Printer.printItemsList(list);
         if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+        return 0;
     }
 }

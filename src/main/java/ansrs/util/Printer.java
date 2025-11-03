@@ -5,8 +5,8 @@ import ansrs.set.CompletedSet;
 import ansrs.set.WorkingSet;
 import ansrs.db.DBManager;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,16 +24,47 @@ public class Printer {
         Optional<List<Item>> itemsList = DBManager.getAllItems();
         System.out.println("Database:");
         if (itemsList.isPresent()) {
-            printItemsGrid(itemsList.get());
+            printItemsList(itemsList.get());
         } else {
             System.out.println("+-----------------------+");
             System.out.println("|   Database is empty   |");
             System.out.println("+-----------------------+");
         }
+
     }
-    public static void printItemsGrid(List<Item> items) {
+    public static void setStatePrinter(WorkingSet workingSet, CompletedSet completedSet, DBManager db) {
+        System.out.println("+------------SYSTEM STATUS-------------+");
+        System.out.println("WorkingSet: ");
+        List<Item> workingSetItems = db.getItemsFromList(workingSet.getItemIdList()).orElse(new ArrayList<>());
+        printItemsList(workingSetItems);
+        System.out.println("CompletedSet: ");
+        List<Item> completedSetChangeList = db.getItemsFromList((completedSet.getItems().keySet().stream().toList())).orElse(new ArrayList<>());
+        for (Item i: completedSetChangeList){
+            CompletedSet.Pair<Item.Pool, LocalDate> poolLocalDatePair = completedSet.getItems().get(i.getItemId());
+            if (poolLocalDatePair.getPool() != null) i.setItemPool(poolLocalDatePair.getPool());
+            i.setLastRecall(poolLocalDatePair.getLast_recall());
+            i.setTotalRecalls(i.getTotalRecalls()+1);
+        }
+        printItemsList(completedSetChangeList);
+
+    }
+
+    public static void printItem(Item item){
+        if (item==null){
+            System.out.println(dim+"+-----------------------+");
+            System.out.println("|   "+reset+"Item non-existent"+dim+"   |");
+            System.out.println("+-----------------------+"+reset);
+        } else {
+            printItemRow(item);
+            System.out.println(dim + "---------------------------------------------------------------"+reset);
+        }
+    }
+
+    public static void printItemsList(List<Item> items) {
         if (items == null || items.isEmpty()) {
-            System.out.println("No items to display");
+            System.out.println(dim+"+-----------------------+");
+            System.out.println("|  "+reset+"No Items to display"+dim+"  |");
+            System.out.println("+-----------------------+"+reset);
             return;
         }
 
@@ -49,7 +80,7 @@ public class Printer {
     public static void printItemRow(Item item) {
 
         // Top separator
-        System.out.println(bold+"---------------------------------------------------------------"+reset);
+        System.out.println(dim+"---------------------------------------------------------------"+reset);
 
         // Line 1: Metadata (fixed, annotated)
         System.out.printf(dim+"ID: "+reset+"%4s"+reset+dim+"  POOL: "+reset+"%s"+reset+dim+"  RECALLS: "+reset+"%04d"+reset+dim+"  LAST_RECALL: "+reset+"%s"+"%n",
@@ -65,5 +96,6 @@ public class Printer {
         System.out.println(item.getItemLink());
 
     }
+
 
 }
