@@ -10,6 +10,7 @@ import picocli.CommandLine;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,23 +28,19 @@ class AddCommandTest {
 
     @BeforeEach
     void setup() throws Exception {
-        // Create an isolated temp workspace for each test
         tempDir = Files.createTempDirectory("ansrs-test");
-
         Path workingSetPath = tempDir.resolve("working.set");
         Path completedSetPath = tempDir.resolve("completed.set");
         Path dbPath = tempDir.resolve("ansrs.db");
 
-        // Use real sets but mock DB
-        workingSet = new WorkingSet(workingSetPath);
-        completedSet = new CompletedSet(completedSetPath);
+        workingSet = spy(new WorkingSet(workingSetPath));
+        completedSet = spy(new CompletedSet(completedSetPath));
         db = mock(DBManager.class);
 
         parent = new SRSCommand(workingSet, completedSet, db);
         cmd = new AddCommand();
         cmdLine = new CommandLine(cmd);
         cmd.parent = parent;
-
     }
 
     @AfterEach
@@ -58,99 +55,175 @@ class AddCommandTest {
                 });
     }
 
-    // --- VALID CASES ---
+    // --- VALID INSERTS ---
 
     @Test
-    void testValidInsert() throws Exception {
+    void testValidInsert() {
         when(db.insertItem(any(Item.class))).thenReturn(true);
-        new CommandLine(cmd).execute("1", "Alpha", "https://aphpa", "H");
+        int exit = cmdLine.execute("1", "Alpha", "https://alpha.com", "H");
+        assertEquals(0, exit);
+        verify(db).insertItem(any(Item.class));
+        verify(workingSet, never()).addItem(any());
+    }
+
+    @Test
+    void testValidInsertWithRecallFields() {
+        when(db.insertItem(any(Item.class))).thenReturn(true);
+        String date = LocalDate.now().minusDays(2).toString();
+        int exit = cmdLine.execute("2", "Beta", "https://beta.com", "M",
+                "--last-recall", date, "--total-recalls", "5");
+        assertEquals(0, exit);
         verify(db).insertItem(any(Item.class));
     }
 
-    @Test
-    void testValidUpdateFlow() throws Exception {
-        when(db.insertItem(any())).thenReturn(false);
-        when(db.updateItem(any())).thenReturn(true);
-        assertEquals(0,
-                cmdLine.execute("2", "Beta", "https://beta.com", "M", "-u"));
-        verify(db).updateItem(any());
-    }
+    // --- INSERT VALIDATION FAILURES ---
 
     @Test
-    void testValidInsertWithLastRecallAndTotalRecalls() throws Exception {
-        when(db.insertItem(any())).thenReturn(true);
-        String date = LocalDate.now().minusDays(5).toString();
-        assertEquals(0,
-                cmdLine.execute("3", "Gamma", "https://gamma.com", "L",
-                        "--last-recall", date,
-                        "--total-recalls", "2"));
-        verify(db).insertItem(any(Item.class));
-    }
-
-    // --- VALIDATION FAILURES ---
-
-    @Test
-    void testMissingParameters() {
-        assertEquals(2,cmdLine.execute("0", "", "https://ok.com", "H"));
+    void testMissingInsertParameters() {
+        int exit = cmdLine.execute("3", "Gamma", "https://gamma.com");
+        assertEquals(2, exit);
     }
 
     @Test
     void testInvalidUrlScheme() {
-        assertEquals(2,cmdLine.execute("1", "Invalid", "http://oops.com", "M"));
+        int exit = cmdLine.execute("4", "Delta", "http://delta.com", "H");
+        assertEquals(2, exit);
     }
 
     @Test
     void testInvalidPoolValue() {
-        assertEquals(2,
-                cmdLine.execute("1", "WrongPool", "https://pool.com", "X"));
+        int exit = cmdLine.execute("5", "Epsilon", "https://epsi.com", "X");
+        assertEquals(2, exit);
     }
 
     @Test
-    void testFutureRecallDate() {
-        String date = LocalDate.now().plusDays(2).toString();
-        assertEquals(2,
-                cmdLine.execute("1", "Future", "https://future.com", "H",
-                        "--last-recall", date));
+    void testFutureRecallDateFails() {
+        String futureDate = LocalDate.now().plusDays(5).toString();
+        int exit = cmdLine.execute("6", "Zeta", "https://zeta.com", "M",
+                "--last-recall", futureDate);
+        assertEquals(2, exit);
     }
 
     @Test
-    void testInvalidRecallDateFormat() {
-        assertEquals(2,
-                cmdLine.execute("1", "BadDate", "https://date.com", "M",
-                        "--last-recall", "13-2024-01"));
+    void testInvalidRecallDateFormatFails() {
+        int exit = cmdLine.execute("7", "Eta", "https://eta.com", "L",
+                "--last-recall", "2025/01/02");
+        assertEquals(2, exit);
     }
 
     @Test
-    void testNegativeTotalRecalls() {
-        assertEquals(2,
-                cmdLine.execute("1", "Neg", "https://neg.com", "L",
-                        "--total-recalls", "-1"));
+    void testNegativeTotalRecallsFails() {
+        int exit = cmdLine.execute("8", "Theta", "https://theta.com", "H",
+                "--total-recalls", "-3");
+        assertEquals(2, exit);
     }
 
-    // --- RUNTIME BEHAVIOR ---
+    // --- INSERT DB BEHAVIOR ---
 
     @Test
-    void testInsertFailsWithoutUpdate() throws Exception {
+    void testInsertFailsWhenDuplicate() {
         when(db.insertItem(any())).thenReturn(false);
-        assertEquals(1,
-                cmdLine.execute("10", "Dup", "https://dup.com", "H"));
+        int exit = cmdLine.execute("9", "Dup", "https://dup.com", "L");
+        assertEquals(1, exit);
         verify(db).insertItem(any());
     }
 
     @Test
-    void testInsertFailsAndUpdateFails() throws Exception {
-        when(db.insertItem(any())).thenReturn(false);
-        when(db.updateItem(any())).thenReturn(false);
-        assertEquals(0,
-                cmdLine.execute("11", "UpdateFail", "https://fail.com", "M", "-u"));
+    void testInsertThrowsException() {
+        doThrow(new RuntimeException("DB down")).when(db).insertItem(any(Item.class));
+        int exit = cmdLine.execute("10", "Err", "https://err.com", "H");
+        assertEquals(1, exit);
+        verify(db).insertItem(any(Item.class));
     }
 
+    // --- VALID UPDATES ---
 
     @Test
-    void testExceptionInDbInsertCaught() throws Exception {
-        doThrow(new RuntimeException("DB down")).when(db).insertItem(any(Item.class));
-        assertEquals(1,
-                cmdLine.execute("13", "Throw", "https://throw.com", "H"));
-        verify(db).insertItem(any(Item.class));
+    void testValidUpdateSingleField() {
+        Item existing = new Item(100, "Old", "https://old.com", Item.Pool.H, LocalDate.now(), 1);
+        when(db.getItemById(100)).thenReturn(Optional.of(existing));
+        when(db.updateItem(any())).thenReturn(true);
+
+        int exit = cmdLine.execute("--update", "100", "--link", "https://new.com");
+        assertEquals(0, exit);
+        verify(db).updateItem(any(Item.class));
+    }
+
+    @Test
+    void testValidUpdateMultipleFields() {
+        Item existing = new Item(101, "Old", "https://old.com", Item.Pool.M, LocalDate.now(), 2);
+        when(db.getItemById(101)).thenReturn(Optional.of(existing));
+        when(db.updateItem(any())).thenReturn(true);
+
+        int exit = cmdLine.execute("--update", "101",
+                "--name", "NewName",
+                "--pool", "L",
+                "--total-recalls", "5");
+        assertEquals(0, exit);
+        verify(db).updateItem(any(Item.class));
+    }
+
+    // --- UPDATE VALIDATION FAILURES ---
+
+    @Test
+    void testUpdateWithoutAnyFieldFails() {
+        Item existing = new Item(102, "A", "https://a.com", Item.Pool.L, LocalDate.now(), 1);
+        when(db.getItemById(102)).thenReturn(Optional.of(existing));
+
+        int exit = cmdLine.execute("--update", "102");
+        assertEquals(2, exit);
+    }
+
+    @Test
+    void testUpdateNonExistentItemFails() {
+        when(db.getItemById(103)).thenReturn(Optional.empty());
+        int exit = cmdLine.execute("--update", "103", "--name", "Ghost");
+        assertEquals(1, exit);
+    }
+
+    @Test
+    void testUpdateInvalidUrlFails() {
+        Item existing = new Item(104, "Old", "https://old.com", Item.Pool.H, LocalDate.now(), 1);
+        when(db.getItemById(104)).thenReturn(Optional.of(existing));
+        int exit = cmdLine.execute("--update", "104", "--link", "http://wrong.com");
+        assertEquals(2, exit);
+    }
+
+    @Test
+    void testUpdateInvalidPoolFails() {
+        Item existing = new Item(105, "Old", "https://old.com", Item.Pool.H, LocalDate.now(), 1);
+        when(db.getItemById(105)).thenReturn(Optional.of(existing));
+        int exit = cmdLine.execute("--update", "105", "--pool", "Z");
+        assertEquals(2, exit);
+    }
+
+    @Test
+    void testUpdateNegativeRecallsFails() {
+        Item existing = new Item(106, "Old", "https://old.com", Item.Pool.M, LocalDate.now(), 1);
+        when(db.getItemById(106)).thenReturn(Optional.of(existing));
+        int exit = cmdLine.execute("--update", "106", "--total-recalls", "-2");
+        assertEquals(2, exit);
+    }
+
+    // --- UPDATE DB FAILURES ---
+
+    @Test
+    void testUpdateFailsInDb() {
+        Item existing = new Item(107, "Old", "https://old.com", Item.Pool.H, LocalDate.now(), 1);
+        when(db.getItemById(107)).thenReturn(Optional.of(existing));
+        when(db.updateItem(any())).thenReturn(false);
+
+        int exit = cmdLine.execute("--update", "107", "--name", "New");
+        assertEquals(1, exit);
+    }
+
+    @Test
+    void testUpdateDbThrowsExceptionCaught() {
+        Item existing = new Item(108, "Old", "https://old.com", Item.Pool.L, LocalDate.now(), 2);
+        when(db.getItemById(108)).thenReturn(Optional.of(existing));
+        doThrow(new RuntimeException("DB crash")).when(db).updateItem(any(Item.class));
+
+        int exit = cmdLine.execute("--update", "108", "--name", "Boom");
+        assertEquals(1, exit);
     }
 }
