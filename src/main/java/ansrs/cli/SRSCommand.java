@@ -7,6 +7,7 @@ import ansrs.util.Log;
 import ansrs.util.Printer;
 import picocli.CommandLine.*;
 
+import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
 @Command(name = "ansrs",
@@ -39,27 +40,42 @@ public class SRSCommand implements Callable<Integer> {
     @Option(names = {"-i", "--id"}, paramLabel = "ITEM_ID", description = "Print a specific Item", required = false, defaultValue = "-12341234")
     private int itemId;
 
+    @Option(names = {"-n", "--name"}, paramLabel = "ITEM_NAME_QUERY", description = "Find an Item by it's name, query must be longer than one character", required = false, defaultValue = "zyxwvutsrqp")
+    private String itemName;
+
     @Override
-    public Integer call(){
+    public Integer call() {
         validate();
-        if (itemId!=-12341234){
+        if (itemId != -12341234) {
             System.out.println("Item:");
             Printer.printItem(db.getItemById(itemId).orElse(null));
         }
-       if(list) {
-           if (set){
-               Printer.setStatePrinter(workingSet, completedSet, db);
-           } else {
-               Printer.statePrinter(workingSet, completedSet,db);
-           }
-       }
-       return 0;
+        if (!itemName.equals("zyxwvutsrqp")) {
+            System.out.println("Search: " + itemName);
+            Printer.printItemsList(db.searchItemsByName(itemName.trim()).orElse(new ArrayList<>()));
+        }
+        if (list) {
+            if (set) {
+                Printer.setStatePrinter(workingSet, completedSet, db);
+            } else {
+                Printer.statePrinter(workingSet, completedSet, db);
+            }
+        }
+        return 0;
     }
 
-    private void validate(){
-        if (itemId!=-12341234){
-            if (itemId<=0) throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID cannot be non-positive"));
+    private void validate() {
+        if (itemId != -12341234) {
+            if (itemId <= 0)
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID cannot be non-positive"));
         }
-        if (set && !list) throw new ParameterException(spec.commandLine(), Log.errorMsg("--set is to be used along with --list, to display only Set statuses"));
+        if (!itemName.equals("zyxwvutsrqp")) {
+            if (itemName.isBlank())
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_NAME_QUERY cannot be empty, to see all Items, use --list flag"));
+            if (itemName.trim().length()==1)
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_NAME_QUERY cannot be of size 1, too broad"));
+        }
+        if (set && !list)
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("--set is to be used along with --list, to display only Set statuses"));
     }
 }

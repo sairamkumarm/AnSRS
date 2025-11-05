@@ -91,4 +91,45 @@ class SRSCommandTest {
         assertEquals(0, cmdLine.execute("--version"));
         assertEquals(0, cmdLine.execute("--help"));
     }
+
+    @Test
+    void testNameFlagCallsSearchItemsByName() {
+        when(db.searchItemsByName("widget")).thenReturn(Optional.of(new java.util.ArrayList<>()));
+        int exitCode = cmdLine.execute("--name", "widget");
+        assertEquals(0, exitCode);
+        verify(db, times(1)).searchItemsByName("widget");
+    }
+
+    @Test
+    void testNameFlagTrimsWhitespace() {
+        when(db.searchItemsByName("widget")).thenReturn(Optional.of(new java.util.ArrayList<>()));
+        int exitCode = cmdLine.execute("--name", "   widget   ");
+        assertEquals(0, exitCode);
+        verify(db, times(1)).searchItemsByName("widget");
+    }
+
+    @Test
+    void testBlankNameFailsValidation() {
+        int exitCode = cmdLine.execute("--name", "   ");
+        assertEquals(2, exitCode);
+        verify(db, never()).searchItemsByName(anyString());
+    }
+
+    @Test
+    void testSingleCharacterNameFailsValidation() {
+        int exitCode = cmdLine.execute("--name", "a");
+        assertEquals(2, exitCode);
+        verify(db, never()).searchItemsByName(anyString());
+    }
+
+    @Test
+    void testNameFlagWithListAlsoPrintsState() {
+        when(db.searchItemsByName("widget")).thenReturn(Optional.of(new java.util.ArrayList<>()));
+        when(db.getAllItems()).thenReturn(Optional.of(new java.util.ArrayList<>()));
+        int exitCode = cmdLine.execute("--name", "widget", "--list");
+        assertEquals(0, exitCode);
+        verify(db, atLeastOnce()).searchItemsByName("widget");
+        verify(db, atLeastOnce()).getAllItems();
+    }
+
 }

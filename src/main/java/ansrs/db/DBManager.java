@@ -30,7 +30,7 @@ public class DBManager implements AutoCloseable {
 
     //test purpose only
     public DBManager(String mockTestDBNameAndPath) throws SQLException {
-        connection = DriverManager.getConnection("jdbc:h2:"+ mockTestDBNameAndPath, "ta","");
+        connection = DriverManager.getConnection("jdbc:h2:" + mockTestDBNameAndPath, "ta", "");
         initTable();
     }
 
@@ -90,8 +90,12 @@ public class DBManager implements AutoCloseable {
             connection.commit();
             return true;
         } catch (SQLException e) {
-            try {connection.rollback();} catch (SQLException ignore) {}
-            if (Objects.equals(e.getSQLState(), "23505")) throw new RuntimeException(Log.errorMsg("ERROR: Duplicate ITEM_ID found."));
+            try {
+                connection.rollback();
+            } catch (SQLException ignore) {
+            }
+            if (Objects.equals(e.getSQLState(), "23505"))
+                throw new RuntimeException(Log.errorMsg("ERROR: Duplicate ITEM_ID found."));
             return false;
         } finally {
             try {
@@ -121,7 +125,10 @@ public class DBManager implements AutoCloseable {
             connection.commit();
             return true;
         } catch (SQLException e) {
-            try {connection.rollback();} catch (SQLException ignore) {}
+            try {
+                connection.rollback();
+            } catch (SQLException ignore) {
+            }
             return false;
         } finally {
             try {
@@ -260,11 +267,11 @@ public class DBManager implements AutoCloseable {
                 );
                 res.add(p);
             }
+            return Optional.of(res);
         } catch (SQLException e) {
             Log.error("Failed to fetch items from DuckDB\n" + e);
             return Optional.empty();
         }
-        return Optional.of(res);
     }
 
     public boolean deleteItemsById(int itemId) {
@@ -282,10 +289,32 @@ public class DBManager implements AutoCloseable {
             statement.setInt(1, itemId);
             ResultSet rs = statement.executeQuery();
             rs.next();
-            if (rs.getInt(1) == 1) return true;
-            else return false;
+            return rs.getInt(1) == 1;
         } catch (SQLException e) {
             return false;
+        }
+    }
+
+    public Optional<List<Item>> searchItemsByName(String query) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM items WHERE LOWER(name) LIKE LOWER(?)")) {
+            List<Item> items = new ArrayList<>();
+            statement.setString(1,"%"+query+"%");
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                Item item = new Item(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("link"),
+                        Item.Pool.valueOf(rs.getString("pool")),
+                        rs.getDate("last_recall").toLocalDate(),
+                        rs.getInt("total_recalls")
+                );
+                items.add(item);
+            }
+            return Optional.of(items);
+        } catch (SQLException e) {
+            Log.error(e.getMessage());
+            return Optional.empty();
         }
     }
 

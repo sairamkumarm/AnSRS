@@ -106,6 +106,31 @@ class DBManagerTest {
     }
 
     @Test
+    void testSearchItemsByName() {
+        Item i1 = new Item(1, "AlphaWidget", "https://a.com", Item.Pool.H, LocalDate.now(), 2);
+        Item i2 = new Item(2, "BetaTool", "https://b.com", Item.Pool.M, LocalDate.now(), 1);
+        Item i3 = new Item(3, "GammaWidget", "https://c.com", Item.Pool.L, LocalDate.now(), 0);
+        db.insertItemsBatch(List.of(i1, i2, i3));
+
+        Optional<List<Item>> result1 = db.searchItemsByName("widget");
+        assertTrue(result1.isPresent());
+        List<Item> matches = result1.get();
+        assertEquals(2, matches.size());
+        assertTrue(matches.stream().anyMatch(i -> i.getItemName().equals("AlphaWidget")));
+        assertTrue(matches.stream().anyMatch(i -> i.getItemName().equals("GammaWidget")));
+
+        Optional<List<Item>> result2 = db.searchItemsByName("beta");
+        assertTrue(result2.isPresent());
+        assertEquals(1, result2.get().size());
+        assertEquals("BetaTool", result2.get().get(0).getItemName());
+
+        Optional<List<Item>> result3 = db.searchItemsByName("nonexistent");
+        assertTrue(result3.isPresent());
+        assertTrue(result3.get().isEmpty());
+    }
+
+
+    @Test
     void testClearDatabase() {
         db.insertItem(baseItem);
         assertTrue(db.clearDatabase());
