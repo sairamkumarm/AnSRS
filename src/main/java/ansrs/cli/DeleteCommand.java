@@ -17,7 +17,7 @@ public class DeleteCommand implements Callable<Integer> {
     @Spec
     Model.CommandSpec spec;
 
-    @Parameters(index = "0", paramLabel = "ITEM_ID", description = "Unique identifier of an item", defaultValue = "0")
+    @Parameters(index = "0", paramLabel = "ITEM_ID", description = "Unique identifier of an item", defaultValue = "-12341234")
     private int itemId;
 
     @Option(names = {"-c", "--completed"}, description = "Removes from items that are completed but, are yet to be commited to the database.")
@@ -29,31 +29,58 @@ public class DeleteCommand implements Callable<Integer> {
     @Option(names = "--sure", description = "A defensive fallback to prevent accidental deletions", required = true)
     private boolean sure;
 
+    @Option(names = "--working-all", description = "Removes all items from WorkingSet")
+    private boolean clearWorkingSet;
+
+    @Option(names = "--completed-all", description = "Removes all items from CompletedSet")
+    private boolean clearCompletedSet;
+
     @Option(names = {"--hard-reset"}, description = "Hard resets all the persistent data, sets included")
     private boolean reset;
 
     @Override
     public Integer call() {
-        if (!sure) {
-            throw new ParameterException(spec.commandLine(), Log.errorMsg("--sure flag is needed to perform deletions."));
-        }
-        if (itemId == 0) {
-            if (reset) {
-                if (
-                        parent.db.clearDatabase() &&
-                                parent.completedSet.clearSet() &&
-                                parent.workingSet.clearSet()
-                )
-                    Log.info("Reset successful");
-                else Log.error("Complete Reset failed, use --list flag to check status");
-                return 1;
-            } else
-                throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID can be skipped only during the --hard-reset command"));
+        validate();
+        if (reset) {
+            if (
+                    parent.db.clearDatabase() &&
+                            parent.completedSet.clearSet() &&
+                            parent.workingSet.clearSet()
+            ){
+                Log.info("Reset successful");
+                return 0;
+            }
+            else Log.error("Complete Reset failed, use --list flag to check status");
+            return 1;
         }
 
-        if (itemId < 0) {
-            throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID [" + itemId + "] cannot be non-positive"));
+        if (clearCompletedSet && clearWorkingSet){
+            if (parent.workingSet.clearSet() && parent.completedSet.clearSet()){
+                Log.info("WorkingSet and CompletedSet cleared");
+                return 0;
+            } else {
+                Log.error("Complete Deletion failed, use -ls flag to check status");
+                return 1;
+            }
         }
+        if (clearWorkingSet){
+            if (parent.workingSet.clearSet()) {
+                Log.info("WorkingSet cleared");
+                return 0;
+            }
+            else Log.error("WorkingSet clear failed, use --list --set or -ls flags to check status");
+            return 1;
+        }
+        if (clearCompletedSet){
+            if (parent.completedSet.clearSet()) {
+                Log.info("CompletedSet cleared");
+                return 0;
+            }
+            else Log.error("CompletedSet clear failed, use --list --set or -ls flags to check status");
+            return 1;
+        }
+
+
         if (deleteFromDatabase) {
             if (!parent.db.deleteItemsById(itemId)) {
                 Log.error("Error in deleting ITEM_ID [" + itemId + "] from DB, use --list to confirm its existence");
@@ -80,4 +107,20 @@ public class DeleteCommand implements Callable<Integer> {
         return 0;
     }
 
+    void validate(){
+        if (!sure) throw new ParameterException(spec.commandLine(), Log.errorMsg("--sure flag is needed to perform deletions."));
+        if (itemId==-12341234){
+            if(!clearCompletedSet && !clearWorkingSet && !reset){
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID can be skipped only during the --hard-reset, --working-all, or --completed-all command"));
+            }
+            if (reset && (clearCompletedSet || clearWorkingSet)) {
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("The --hard-reset command cannot be paired with --working-all or --completed-all commands"));
+            }
+        }else {
+            if (itemId<=0) throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID [" + itemId + "] cannot be non-positive"));
+            if (reset || clearWorkingSet || clearCompletedSet) throw new ParameterException(spec.commandLine(), Log.errorMsg("The --hard-reset, --working-all, or --completed-all commands, can only be used when ITEM_ID is empty"));
+
+        }
+
+    }
 }

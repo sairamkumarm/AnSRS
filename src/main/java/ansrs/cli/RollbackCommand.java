@@ -20,7 +20,7 @@ public class RollbackCommand implements Callable<Integer> {
     @ParentCommand
     SRSCommand parent;
 
-    @Parameters(paramLabel = "ITEM_ID", description = "Unique identifier of an item", defaultValue = "0")
+    @Parameters(index = "0", paramLabel = "ITEM_ID", description = "Unique identifier of an item", defaultValue = "0")
     private int itemId;
 
     @Option(names = {"-a", "--all"}, description = "Rollback all items from WorkingSet", required = false)

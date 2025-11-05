@@ -89,7 +89,7 @@ class DeleteCommandTest {
         doReturn(true).when(completedSet).clearSet();
         doReturn(true).when(workingSet).clearSet();
 
-        assertEquals(1, cmdLine.execute("--sure", "--hard-reset"));
+        assertEquals(0, cmdLine.execute("--sure", "--hard-reset"));
         verify(db).clearDatabase();
         verify(workingSet).clearSet();
         verify(completedSet).clearSet();
@@ -158,15 +158,6 @@ class DeleteCommandTest {
         verify(db).deleteItemsById(15);
     }
 
-    @Test
-    void testHardResetAlsoClearsPartial() {
-        when(db.clearDatabase()).thenReturn(true);
-        doReturn(true).when(workingSet).clearSet();
-        doReturn(false).when(completedSet).clearSet();
-
-        assertEquals(1, cmdLine.execute("--sure", "--hard-reset"));
-        verify(db).clearDatabase();
-    }
 
 //    @Test
 //    void testDeletionStillWorksIfWorkingSetThrows() {
@@ -183,4 +174,155 @@ class DeleteCommandTest {
         assertEquals(0, cmdLine.execute("31", "--sure"));
         verify(workingSet, times(2)).removeItem(anyInt());
     }
+
+    @Test
+    void testClearWorkingSetSuccess() {
+        doReturn(true).when(workingSet).clearSet();
+        assertEquals(0, cmdLine.execute("--working-all", "--sure"));
+        verify(workingSet).clearSet();
+    }
+
+    @Test
+    void testClearWorkingSetFailure() {
+        doReturn(false).when(workingSet).clearSet();
+        assertEquals(1, cmdLine.execute("--working-all", "--sure"));
+    }
+
+    @Test
+    void testClearCompletedSetSuccess() {
+        doReturn(true).when(completedSet).clearSet();
+        assertEquals(0, cmdLine.execute("--completed-all", "--sure"));
+        verify(completedSet).clearSet();
+    }
+
+    @Test
+    void testClearCompletedSetFailure() {
+        doReturn(false).when(completedSet).clearSet();
+        assertEquals(1, cmdLine.execute("--completed-all", "--sure"));
+    }
+
+    @Test
+    void testHardResetCannotBePairedWithWorkingAll() {
+        assertEquals(2,
+                cmdLine.execute("--hard-reset", "--working-all", "--sure"));
+    }
+
+    @Test
+    void testHardResetCannotBePairedWithCompletedAll() {
+        assertEquals(2,
+                cmdLine.execute("--hard-reset", "--completed-all", "--sure"));
+    }
+
+    @Test
+    void testItemIdSkippedWithoutResetThrows() {
+        assertEquals(2,
+                cmdLine.execute("--sure"));
+    }
+
+    @Test
+    void testItemIdGivenWithResetThrows() {
+        assertEquals(2,
+                cmdLine.execute("42", "--hard-reset", "--sure"));
+    }
+
+    @Test
+    void testItemIdGivenWithClearWorkingSetThrows() {
+        assertEquals(2,
+                cmdLine.execute("43", "--working-all", "--sure"));
+    }
+
+    @Test
+    void testItemIdGivenWithClearCompletedSetThrows() {
+        assertEquals(2,
+                cmdLine.execute("44", "--completed-all", "--sure"));
+    }
+
+    @Test
+    void testDatabaseDeletionLogsEvenIfSetsEmpty() {
+        when(db.deleteItemsById(50)).thenReturn(true);
+        doReturn(false).when(workingSet).removeItem(50);
+        doReturn(false).when(completedSet).removeItem(50);
+        assertEquals(0, cmdLine.execute("50", "--database", "--sure"));
+    }
+
+    @Test
+    void testCompletedAllWithMissingSureFlagThrows() {
+        assertEquals(2, cmdLine.execute("--completed-all"));
+    }
+
+    @Test
+    void testWorkingAllWithMissingSureFlagThrows() {
+        assertEquals(2, cmdLine.execute("--working-all"));
+    }
+
+    @Test
+    void testResetWithMissingSureFlagThrows() {
+        assertEquals(2, cmdLine.execute("--hard-reset"));
+    }
+
+    @Test
+    void testResetPartialClearFailsReturnsOne() {
+        when(db.clearDatabase()).thenReturn(true);
+        doReturn(true).when(workingSet).clearSet();
+        doReturn(false).when(completedSet).clearSet();
+        assertEquals(1, cmdLine.execute("--sure", "--hard-reset"));
+    }
+
+    @Test
+    void testCompletedSetDeleteWithInvalidItemIdThrows() {
+        assertEquals(2,
+                cmdLine.execute("-1", "--completed", "--sure"));
+    }
+
+
+    @Test
+    void testClearWorkingAndCompletedSetTogetherSuccess() {
+        doReturn(true).when(workingSet).clearSet();
+        doReturn(true).when(completedSet).clearSet();
+        assertEquals(0, cmdLine.execute("--working-all", "--completed-all", "--sure"));
+        verify(workingSet).clearSet();
+        verify(completedSet).clearSet();
+    }
+
+    @Test
+    void testClearWorkingAndCompletedSetTogetherFailure() {
+        doReturn(true).when(workingSet).clearSet();
+        doReturn(false).when(completedSet).clearSet();
+        assertEquals(1, cmdLine.execute("--working-all", "--completed-all", "--sure"));
+        verify(workingSet).clearSet();
+        verify(completedSet).clearSet();
+    }
+
+    @Test
+    void testItemIdSkippedWithBothAllFlagsAllowed() {
+        assertEquals(0, cmdLine.execute("--working-all", "--completed-all", "--sure"));
+    }
+
+    @Test
+    void testItemIdGivenWithBothAllFlagsThrows() {
+        assertEquals(2,
+                cmdLine.execute("21", "--working-all", "--completed-all", "--sure"));
+    }
+
+    @Test
+    void testHardResetWithBothAllFlagsThrows() {
+        assertEquals(2,
+                cmdLine.execute("--hard-reset", "--working-all", "--completed-all", "--sure"));
+    }
+
+    @Test
+    void testBothAllFlagsWithoutSureThrows() {
+        assertEquals(2,
+                cmdLine.execute("--working-all", "--completed-all"));
+    }
+
+    @Test
+    void testClearBothSetsDoesNotTouchDatabase() {
+        doReturn(true).when(workingSet).clearSet();
+        doReturn(true).when(completedSet).clearSet();
+        assertEquals(0, cmdLine.execute("--working-all", "--completed-all", "--sure"));
+        verifyNoInteractions(db);
+    }
+
+
 }
