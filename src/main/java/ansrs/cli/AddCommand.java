@@ -38,13 +38,13 @@ public class AddCommand implements Callable<Integer> {
     private String itemPool;
 
     // used for update
-    @Option(names = "--name", description = "Update item name")
+    @Option(names = "--name", paramLabel = "ITEM_NAME", description = "Update item name")
     private String updateName;
 
-    @Option(names = "--link", description = "Update item link (must start with https://)")
+    @Option(names = "--link", paramLabel = "ITEM_LINK", description = "Update item link (must start with https://)")
     private String updateLink;
 
-    @Option(names = "--pool", description = "Update item pool (H/M/L)")
+    @Option(names = "--pool",  paramLabel = "ITEM_POOL", description = "Update item pool (H/M/L)")
     private String updatePool;
 
     @Option(names = {"-u", "--update"}, description = "Update an existing item", required = false)

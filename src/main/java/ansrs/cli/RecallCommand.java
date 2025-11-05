@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 @Command(name = "recall",
-        description = "Loads items from database into WorkingSet for recall",
+        description = "Loads items from database or custom items into WorkingSet for recall",
         mixinStandardHelpOptions = true)
 public class RecallCommand implements Callable<Integer> {
 

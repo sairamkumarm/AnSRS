@@ -16,26 +16,28 @@ Author: Sairamkumar M
 Email: sairamkumar.m@outlook.com
 Github: https://github.com/sairamkumarm/AnSRS
 
+AnSRS (Pronounced "Answers") is a spaced repetition system.
 ansrs is a command-line spaced repetition system designed for quick item tracking and recall
 scheduling. It uses a lightweight local database to manage three sets: working, completed,
 and recall. The system supports a jump-start feature that allows new users to begin recall
 sessions immediately using predefined items, bypassing the usual initialization delay.
 
-The tool is currently built for Windows only and compiled into a native binary for
-zero-dependency execution. Linux support can be added easily, but testing is pending.
-
-Usage: ansrs [-hlsV] [-i=ITEM_ID] [COMMAND]
-
-AnSRS (Pronounced "Answers") is a spaced repetition system.
-
 There are 3 Store of data here.
 A WorkingSet, where Items set for recall during a session are stored.
 A CompletedSet, where items recalled, are stored, waiting to be commited.
 A Database, where items are persisted for further recollection.
+                            
+The tool is currently built for Windows only and compiled into a native binary for
+zero-dependency execution. Linux support can be added easily, but testing is pending.
+
+Usage: ansrs [-hlsV] [-i=ITEM_ID] [-n=ITEM_NAME_QUERY] [COMMAND]
 
   -h, --help         Show this help message and exit.
   -i, --id=ITEM_ID   Print a specific Item
   -l, --list         Lists set and db state
+  -n, --name=ITEM_NAME_QUERY
+                     Find an Item by it's name, query must be longer than one
+                       character
   -s, --set          Use this flag with --list to print only set
   -V, --version      Print version information and exit.
 Commands:
@@ -51,23 +53,30 @@ Commands:
 ========================================================
 Add Command
 
-Usage: ansrs add [-huV] [--last-recall=ITEM_LAST_RECALL]
-                 [--total-recalls=ITEM_TOTAL_RECALL] ITEM_ID ITEM_NAME
-                 ITEM_LINK ITEM_POOL
+Usage: ansrs add [-huV] [--last-recall=ITEM_LAST_RECALL] [--link=ITEM_LINK]
+                 [--name=ITEM_NAME] [--pool=ITEM_POOL]
+                 [--total-recalls=ITEM_TOTAL_RECALLS] ITEM_ID [ITEM_NAME]
+                 [ITEM_LINK] [ITEM_POOL]
 Add new items into the item database or update an existing one
-      ITEM_ID     Unique identifier of an item
-      ITEM_NAME   Name of the item, as in title, use Quotes
-      ITEM_LINK   Link to the item, optional quotes
-      ITEM_POOL   Pick from H, M, and L, (HIGH/MEDIUM/LOW)
-  -h, --help      Show this help message and exit.
+Parameter Order: ITEM_ID ITEM_NAME ITEM_LINK ITEM_POOL
+[--last-recall=ITEM_RECALL_DATE] [--total-recalls=ITEM_TOTAL_RECALLS]
+To update, use the flag versions or name, link, pool, last_recall and
+total_recalls
+
+      ITEM_ID            Unique identifier of an item
+      [ITEM_NAME]        Name of the item, required for insert
+      [ITEM_LINK]        Link to the item, required for insert
+      [ITEM_POOL]        Pick from H, M, and L, required for insert
+  -h, --help             Show this help message and exit.
       --last-recall=ITEM_LAST_RECALL
-                  Set an optional custom last recall date, by default it is set
-                    to today.
-      --total-recalls=ITEM_TOTAL_RECALL
-                  Set an optional custom total recall count, by default it is
-                    set to 0
-  -u, --update    To be used while updating an existing item
-  -V, --version   Print version information and exit.
+                         Set custom last recall date (YYYY-MM-DD)
+      --link=ITEM_LINK   Update item link (must start with https://)
+      --name=ITEM_NAME   Update item name
+      --pool=ITEM_POOL   Update item pool (H/M/L)
+      --total-recalls=ITEM_TOTAL_RECALLS
+                         Set custom total recall count
+  -u, --update           Update an existing item
+  -V, --version          Print version information and exit.
 
 ========================================================
 Complete Command
@@ -91,17 +100,20 @@ Marks item as completed, and transfers them to the CompletedSet
 ========================================================
 Delete Command
 
-Usage: ansrs delete [-cdhV] [--hard-reset] --sure ITEM_ID
+Usage: ansrs delete [-cdhV] [--completed-all] [--hard-reset] --sure
+                    [--working-all] ITEM_ID
 Remove from WorkingSet, CompletedSet and db, depending on the flags, by default
 it removes from WorkingSet
-      ITEM_ID        Unique identifier of an item
-  -c, --completed    Removes from items that are completed but, are yet to be
-                       commited to the database.
-  -d, --database     Removes a item from the database and sets
-  -h, --help         Show this help message and exit.
-      --hard-reset   Hard resets all the persistent data, sets included
-      --sure         A defensive fallback to prevent accidental deletions
-  -V, --version      Print version information and exit.
+      ITEM_ID           Unique identifier of an item
+  -c, --completed       Removes from items that are completed but, are yet to
+                          be commited to the database.
+      --completed-all   Removes all items from CompletedSet
+  -d, --database        Removes a item from the database and sets
+  -h, --help            Show this help message and exit.
+      --hard-reset      Hard resets all the persistent data, sets included
+      --sure            A defensive fallback to prevent accidental deletions
+  -V, --version         Print version information and exit.
+      --working-all     Removes all items from WorkingSet
 
 ========================================================
 Commit Command
@@ -116,12 +128,15 @@ Save completed items in WorkingSet to the database
 ========================================================
 Recall Command
 
-Usage: ansrs recall [-afhV] RECALL_COUNT
-Loads items from database into WorkingSet for recall
+Usage: ansrs recall [-afhV] [-c=ITEM_ID[,ITEM_ID...]...]... RECALL_COUNT
+Loads items from database or custom items into WorkingSet for recall
       RECALL_COUNT   The amount of items to load into WorkingSet for recall
-  -a, --append       use --append, to append to an existing non empty
-                       WorkingSet, only unique items are added
-  -f, --force        use --force, to overwrite existing non-empty WorkingSet
+  -a, --append       Append to an existing non empty WorkingSet, only unique
+                       items are added
+  -c, --custom=ITEM_ID[,ITEM_ID...]...
+                     Custom ITEM_ID(s) to recall, use space or comma separated
+                       values
+  -f, --force        Overwrite existing non-empty WorkingSet
   -h, --help         Show this help message and exit.
   -V, --version      Print version information and exit.
 
@@ -166,9 +181,9 @@ Planned Additions
 - [ ] Stats Command
 - [ ] Configuration File for Recall Algorithm
 
-Thank you for your time.   
+Thank you for your time.
 
 --   
 With sincere regard,   
 Sairamkumar M   
-[GitHub](https://github.com/sairamkumarm) | [LinkedIn](https://www.linkedin.com/in/sairamkumarm/) | [Website](https://sairamkumar.vercel.app)
+[GitHub](https://github.com/sairamkumarm) | [LinkedIn](https://www.linkedin.com/in/sairamkumarm/) | [Website](https://sairamkumarm.com)
