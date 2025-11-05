@@ -59,7 +59,6 @@ public class ImportCommand implements Callable<Integer> {
                 for (Item i : duplicates) Log.warn("Duplicate " + i.toString());
                 if (success) {
                     Log.info("Import success: Added " + uniques.size() + " Unique Rows to database");
-                    if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
                     return 0;
                 } else if (uniques.isEmpty()) Log.error("No Items to add to db");
                 else Log.error("Import failed");
@@ -67,11 +66,9 @@ public class ImportCommand implements Callable<Integer> {
                 success = parent.db.upsertItemsBatch(items);
                 if (success) {
                     Log.info("Import success: Merged " + items.size() + " Valid Rows to database");
-                    if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
                     return 0;
                 } else Log.error("Import failed");
             }
-            if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
             return 1;
         } catch (ParameterException e) {
             throw e;

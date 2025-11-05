@@ -147,15 +147,6 @@ class AddCommandTest {
 
 
     @Test
-    void testParentListTriggersPrinter() throws Exception {
-        parent.list = true;
-        when(db.insertItem(any())).thenReturn(true);
-        assertEquals(0,
-                cmdLine.execute("12", "Printer", "https://print.com", "L"));
-        verify(db).insertItem(any());
-    }
-
-    @Test
     void testExceptionInDbInsertCaught() throws Exception {
         doThrow(new RuntimeException("DB down")).when(db).insertItem(any(Item.class));
         assertEquals(1,

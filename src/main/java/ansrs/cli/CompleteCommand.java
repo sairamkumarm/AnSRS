@@ -52,7 +52,6 @@ public class CompleteCommand implements Callable<Integer> {
                 }
             }
             Log.info("WorkingSet completed");
-            if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
             return 0;
         }
 
@@ -76,7 +75,6 @@ public class CompleteCommand implements Callable<Integer> {
             }
         }
         Log.info("Completed ITEM_ID [" + itemId + "]" + ((pool != null) ? (", and moved item to ITEM_POOL[" + pool.name() + "]") : "") + ((!lastRecall.equals(LocalDate.now()))?", with ITEM_LAST_RECALL["+lastRecall.toString()+"]":""));
-        if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
         return 0;
     }
 

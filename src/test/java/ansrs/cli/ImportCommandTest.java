@@ -132,22 +132,6 @@ class ImportCommandTest {
         verify(db, times(1)).insertItemsBatch(anyList());
     }
 
-    @Test
-    void testParentListTriggersPrinterOnSuccess() throws Exception {
-        List<String> rows = List.of(
-                "7,Item Seven,https://seven.example,L," + LocalDate.now().toString() + ",0"
-        );
-        Path csv = createCsv("items5.csv", rows);
-
-        when(db.upsertItemsBatch(anyList())).thenReturn(true);
-        parent.list = true;
-
-        int exit = cmdLine.execute("--path", csv.toString(), "--preserve", "csv");
-        assertEquals(0, exit);
-
-        // statePrinter reads db.getAllItems internally, so verify db interaction
-        verify(db, atLeastOnce()).getAllItems();
-    }
 
     // --- VALIDATION FAILURES (exit code 2) ---
 

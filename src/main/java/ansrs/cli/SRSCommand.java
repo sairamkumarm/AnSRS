@@ -31,13 +31,13 @@ public class SRSCommand implements Callable<Integer> {
     private Model.CommandSpec spec;
 
     @Option(names = {"-l", "--list"}, description = "Lists set and db state", required = false)
-    public boolean list;
+    private boolean list;
 
     @Option(names = {"-s", "--set"}, description = "Use this flag with --list to print only set", required = false)
-    public boolean set;
+    private boolean set;
 
     @Option(names = {"-i", "--id"}, paramLabel = "ITEM_ID", description = "Print a specific Item", required = false, defaultValue = "-12341234")
-    public int itemId;
+    private int itemId;
 
     @Override
     public Integer call(){

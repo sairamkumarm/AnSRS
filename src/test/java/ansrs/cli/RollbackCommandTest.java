@@ -84,14 +84,6 @@ class RollbackCommandTest {
         assertEquals(1, cmdLine.execute("--all"));
     }
 
-    @Test
-    void testParentListTriggersPrinter() {
-        parent.list = true;
-        completedSet.addItem(9, Item.Pool.L);
-        assertEquals(0, cmdLine.execute("9"));
-        assertTrue(workingSet.getItemIdSet().contains(9));
-    }
-
     // --- VALIDATION FAILURES ---
 
     @Test

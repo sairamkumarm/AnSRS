@@ -109,13 +109,6 @@ class CompleteCommandTest {
         assertEquals(LocalDate.parse(date), completedSet.getItems().get(6).getLast_recall());
     }
 
-    @Test
-    void testParentListTriggersPrinter() {
-        parent.list = true;
-        workingSet.addItem(9);
-        assertEquals(0, cmdLine.execute("9"));
-        assertTrue(completedSet.containsItem(9));
-    }
 
     // --- VALIDATION FAILURES ---
 

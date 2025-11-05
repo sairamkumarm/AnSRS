@@ -65,18 +65,6 @@ class CommitCommandTest {
         verify(completedSet, atLeastOnce()).removeItem(1);
     }
 
-    @Test
-    void testSuccessfulCommitWithListFlag() {
-        parent.list = true;
-        Item item = new Item(2, "Mock2", "https://mock2.com", Item.Pool.M, LocalDate.now(), 1);
-        completedSet.addItem(2, Item.Pool.L, LocalDate.now());
-        when(db.getItemsFromList(anyList())).thenReturn(Optional.of(List.of(item)));
-        when(db.updateItemsBatch(anyList())).thenReturn(true);
-
-        assertEquals(0, cmdLine.execute());
-        verify(db).updateItemsBatch(anyList());
-        verify(completedSet).removeItem(2);
-    }
 
     @Test
     void testCommitWithForceFlagAndNonEmptyWorkingSet() {
@@ -128,7 +116,6 @@ class CommitCommandTest {
 
     @Test
     void testRollbackWithListFlag() {
-        parent.list = true;
         Item item = new Item(50, "Mock", "url", Item.Pool.L, LocalDate.now(), 1);
         completedSet.addItem(50, Item.Pool.H, LocalDate.now());
         when(db.getItemsFromList(anyList())).thenReturn(Optional.of(List.of(item)));

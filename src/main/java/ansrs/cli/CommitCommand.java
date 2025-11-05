@@ -54,11 +54,10 @@ public class CommitCommand implements Callable<Integer> {
             Log.error("Commit Failed, rolling back");
             //rollback from Set items, not db, to preserve the null pools, that signify no change
             for (Map.Entry<Integer, CompletedSet.Pair<Item.Pool, LocalDate>> item: completedSetItems.entrySet()) parent.completedSet.addItem(item.getKey(), item.getValue().getPool(), item.getValue().getLast_recall());
-            if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
             return 1;
         }
         Log.info("Commit success: "+ dbItems.size()+" items updated");
-        if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
+        Printer.printItemsList(dbItems);
         return 0;
     }
 }

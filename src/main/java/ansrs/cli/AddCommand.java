@@ -66,7 +66,6 @@ public class AddCommand implements Callable<Integer> {
             Log.error(e.getMessage());
             return 1;
         }
-        if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
         return 0;
     }
 

@@ -34,24 +34,20 @@ public class RollbackCommand implements Callable<Integer> {
             if (parent.workingSet.fillSet(completedSetItems.keySet()) &&
                             parent.completedSet.clearSet()) {
                 Log.info("Full rollback complete.");
-                if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
                 return 0;
             }
             else {
                 Log.error("Rollback failed.");
-                if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
                 return 1;
             }
         } else {
             if (parent.workingSet.addItem(itemId) &&
                             parent.completedSet.removeItem(itemId)){
                 Log.info("Item [" + itemId + "] rollback complete.");
-                if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
                 return 0;
             }
             else {
                 Log.error("Item [" + itemId + "] rollback failed.");
-                if (parent.list) Printer.statePrinter(parent.workingSet, parent.completedSet, parent.db);
                 return 1;
             }
         }

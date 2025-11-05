@@ -76,14 +76,6 @@ class DeleteCommandTest {
     }
 
     @Test
-    void testParentListTriggersPrinter() {
-        parent.list = true;
-        workingSet.addItem(5);
-        assertEquals(0, cmdLine.execute("5", "--sure"));
-        verify(workingSet).removeItem(5);
-    }
-
-    @Test
     void testHardResetSuccess() {
         when(db.clearDatabase()).thenReturn(true);
         doReturn(true).when(completedSet).clearSet();

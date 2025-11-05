@@ -87,16 +87,6 @@ class RecallCommandTest {
         assertFalse(workingSet.getItemIdSet().contains(10));
     }
 
-    @Test
-    void testParentListTriggersPrinter() {
-        parent.list = true;
-        RecallService mockService = mock(RecallService.class);
-        doReturn(List.of(1, 2)).when(mockService).recall(2);
-        doReturn(mockService).when(cmd).createRecallService(any());
-
-        assertEquals(0, cmdLine.execute("2"));
-        verify(workingSet, atLeastOnce()).fillSet(anySet());
-    }
 
     // --- VALIDATION FAILURES ---
 
@@ -136,4 +126,47 @@ class RecallCommandTest {
         assertEquals(0, cmdLine.execute("2", "--force", "--append"));
         assertTrue(workingSet.getItemIdSet().containsAll(Set.of(5, 6, 7)));
     }
+
+    // --- CUSTOM ITEM RECALL CASES ---
+
+    @Test
+    void testSingleValidCustomId() {
+        when(db.contains(5)).thenReturn(true);
+        when(db.getItemsFromList(any())).thenReturn(Optional.of(List.of(new Item())));
+        assertEquals(0, cmdLine.execute("--custom", "5"));
+        assertTrue(workingSet.getItemIdSet().contains(5));
+    }
+
+    @Test
+    void testSingleInvalidCustomId() {
+        when(db.contains(99)).thenReturn(false);
+        assertEquals(2, cmdLine.execute("--custom", "99"));
+    }
+
+    @Test
+    void testSingleNegativeCustomId() {
+        assertEquals(2, cmdLine.execute("--custom", "-10"));
+    }
+
+    @Test
+    void testMultipleCustomIdsMixedValidity() {
+        when(db.contains(2)).thenReturn(true);
+        when(db.contains(3)).thenReturn(false);
+        when(db.contains(4)).thenReturn(true);
+//        when(db.getItemsFromList(any())).thenReturn(Optional.of(List.of(new Item())));
+        assertEquals(0, cmdLine.execute("--custom", "2,3,-5,4"));
+        assertTrue(workingSet.getItemIdSet().containsAll(Set.of(2, 4)));
+    }
+
+    @Test
+    void testMultipleCustomIdsAllInvalid() {
+        when(db.contains(anyInt())).thenReturn(false);
+        assertEquals(2, cmdLine.execute("--custom", "100,200"));
+    }
+
+    @Test
+    void testNoRecallCountOrCustom() {
+        assertEquals(2, cmdLine.execute());
+    }
+
 }
