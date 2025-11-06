@@ -1,5 +1,6 @@
 package ansrs;
 
+import ansrs.db.ArchiveManager;
 import ansrs.set.WorkingSet;
 import ansrs.set.CompletedSet;
 import ansrs.cli.SRSCommand;
@@ -35,6 +36,7 @@ public class ansrs {
             WorkingSet workingSet = new WorkingSet(workingSetPath);
             CompletedSet completedSet = new CompletedSet(completedSetPath);
             DBManager db = new DBManager(databasePath);
+            ArchiveManager archiveManager = new ArchiveManager(databasePath);
             if (args.length == 0) {
                 String banner = """
                                                                           \s
@@ -48,7 +50,7 @@ public class ansrs {
                         \\__|  \\__|\\__|  \\__| \\______/ \\__|  \\__| \\______/ \s
                                                                           \s
                                  ANOTHER SPACED REPETITION SYSTEM         \s
-                                       AnSRS Version 1.0.0                \s
+                                       AnSRS Version 1.2.0                \s
                                                                           \s
                        """;
 
@@ -69,7 +71,7 @@ public class ansrs {
                             There are 3 Store of data here.
                             A WorkingSet, where Items set for recall during a session are stored.
                             A CompletedSet, where items recalled, are stored, waiting to be commited.
-                            A Database, where items are persisted for further recollection.
+                            A Database, where items are persisted in normal storage and archived for further recollection.
                             
                             Usage: ansrs [-hlsV] [-i=ITEM_ID] [-n=ITEM_NAME_QUERY] [COMMAND]
 
@@ -90,13 +92,15 @@ public class ansrs {
                               recall    Loads items from database into WorkingSet for recall
                               rollback  Rolls back items from completed state to WorkingSet state
                               import    Import a csv into the database.
+                              archive   Manage archive operations
+                            
                             """);
                 } else {
                     System.out.println("Current WorkingSet:");
                     Printer.printItemsList(db.getItemsFromList(workingSet.getItemIdList()).orElse(new ArrayList<>()));
                 }
             }
-            SRSCommand root = new SRSCommand(workingSet, completedSet, db);
+            SRSCommand root = new SRSCommand(workingSet, completedSet, db, archiveManager);
             int exitCode = new CommandLine(root).execute(args);
             db.close();
             System.exit(exitCode);

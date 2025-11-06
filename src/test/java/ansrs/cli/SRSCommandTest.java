@@ -1,5 +1,6 @@
 package ansrs.cli;
 
+import ansrs.db.ArchiveManager;
 import ansrs.db.DBManager;
 import ansrs.set.CompletedSet;
 import ansrs.set.WorkingSet;
@@ -19,6 +20,7 @@ class SRSCommandTest {
     private WorkingSet workingSet;
     private CompletedSet completedSet;
     private DBManager db;
+    private ArchiveManager am;
     private SRSCommand cmd;
     private CommandLine cmdLine;
 
@@ -29,7 +31,7 @@ class SRSCommandTest {
         completedSet = spy(new CompletedSet(tempDir.resolve("completed.set")));
         db = mock(DBManager.class);
 
-        cmd = spy(new SRSCommand(workingSet, completedSet, db));
+        cmd = spy(new SRSCommand(workingSet, completedSet, db, am));
         cmdLine = new CommandLine(cmd);
     }
 

@@ -10,33 +10,33 @@ import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class DBManager implements AutoCloseable {
+public class ArchiveManager implements AutoCloseable{
     private final Connection connection;
 
-    public DBManager(Path dbPath) {
+    public ArchiveManager(Path path){
         try {
-            if (!Files.exists(dbPath.getParent())) {
-                Files.createDirectories(dbPath.getParent());
+            if (!Files.exists(path.getParent())){
+                Files.createDirectories(path.getParent());
             }
-            String url = "jdbc:h2:file:" + dbPath.toAbsolutePath();
+            String url="jdbc:h2:file:" + path.toAbsolutePath();
             connection = DriverManager.getConnection(url, "sa", "");
             initTable();
+        } catch (IOException e) {
+            throw new RuntimeException(Log.errorMsg("Failed to load database"));
         } catch (SQLException e) {
             throw new RuntimeException(Log.errorMsg("Failed to connect to database"), e);
-        } catch (IOException e) {
-            throw new RuntimeException(Log.errorMsg("Failed to load database"), e);
         }
     }
 
     //test purpose only
-    public DBManager(String mockTestDBNameAndPath) throws SQLException {
+    public ArchiveManager(String mockTestDBNameAndPath) throws SQLException {
         connection = DriverManager.getConnection("jdbc:h2:" + mockTestDBNameAndPath, "ta", "");
         initTable();
     }
 
     public void initTable() {
         try (PreparedStatement statement = connection.prepareStatement("""
-                CREATE TABLE IF NOT EXISTS items(
+                CREATE TABLE IF NOT EXISTS archive(
                     id INTEGER PRIMARY KEY,
                     name VARCHAR(255),
                     link VARCHAR(255),
@@ -47,13 +47,13 @@ public class DBManager implements AutoCloseable {
                 """)) {
             statement.execute();
         } catch (SQLException e) {
-            throw new RuntimeException(Log.errorMsg("Error initialising item table"),e);
+            throw new RuntimeException(Log.errorMsg("Error initialising archive table"),e);
         }
     }
 
     public boolean insertItem(Item item) {
         try (PreparedStatement ps = connection.prepareStatement("""
-                    INSERT INTO items
+                    INSERT INTO archive
                     (id, name, link, pool, last_recall, total_recalls)
                     VALUES (?, ?, ?, ?, ?, ?)
                 """)) {
@@ -72,7 +72,7 @@ public class DBManager implements AutoCloseable {
 
     public boolean insertItemsBatch(List<Item> items) {
         try (PreparedStatement statement = connection.prepareStatement("""
-                INSERT INTO items
+                INSERT INTO archive
                 (id, name, link, pool, last_recall, total_recalls)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """)) {
@@ -107,7 +107,7 @@ public class DBManager implements AutoCloseable {
 
     public boolean upsertItemsBatch(List<Item> items) {
         try (PreparedStatement statement = connection.prepareStatement("""
-                MERGE INTO items
+                MERGE INTO archive
                 (id, name, link, pool, last_recall, total_recalls)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """)) {
@@ -141,7 +141,7 @@ public class DBManager implements AutoCloseable {
     public boolean updateItem(Item item) {
         try (PreparedStatement ps = connection.prepareStatement(
                 """
-                            MERGE INTO items
+                            MERGE INTO archive
                             (id, name, link, pool, last_recall, total_recalls)
                             VALUES (?, ?, ?, ?, ?, ?)
                         """
@@ -162,7 +162,7 @@ public class DBManager implements AutoCloseable {
     public boolean updateItemsBatch(List<Item> items) {
         try (PreparedStatement ps = connection.prepareStatement(
                 """
-                        UPDATE items
+                        UPDATE archive
                         SET name=?, link=?, pool=?, last_recall=?, total_recalls=?
                         WHERE id=?
                         """)
@@ -197,7 +197,7 @@ public class DBManager implements AutoCloseable {
 
     public Optional<Item> getItemById(int itemId) {
         try (
-                ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM items WHERE id=" + itemId);
+                ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM archive WHERE id=" + itemId);
         ) {
             if (rs.next()) {
                 return Optional.of(new Item(
@@ -216,7 +216,7 @@ public class DBManager implements AutoCloseable {
 
     public Optional<List<Item>> getAllItems() {
         List<Item> items = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM items");
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM archive");
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Item p = new Item(
@@ -238,7 +238,7 @@ public class DBManager implements AutoCloseable {
 
     public Optional<HashSet<Integer>> getAllItemsIds() {
         HashSet<Integer> items = new HashSet<>();
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT id FROM items");
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT id FROM archive");
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 items.add(rs.getInt(1));
@@ -254,7 +254,7 @@ public class DBManager implements AutoCloseable {
         if (ids == null || ids.isEmpty()) return Optional.empty();
         String inClause = ids.stream().map(k -> String.valueOf(k)).collect(Collectors.joining(",", "(", ")"));
         List<Item> res = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM items WHERE id IN " + inClause);
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM archive WHERE id IN " + inClause);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Item p = new Item(
@@ -275,7 +275,7 @@ public class DBManager implements AutoCloseable {
     }
 
     public boolean deleteItemsById(int itemId) {
-        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM items WHERE id=?");) {
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM archive WHERE id=?");) {
             statement.setInt(1, itemId);
             int rows = statement.executeUpdate();
             return rows == 1;
@@ -285,7 +285,7 @@ public class DBManager implements AutoCloseable {
     }
 
     public boolean contains(int itemId) {
-        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) as count FROM items WHERE id=?")) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) as count FROM archive WHERE id=?")) {
             statement.setInt(1, itemId);
             ResultSet rs = statement.executeQuery();
             rs.next();
@@ -296,7 +296,7 @@ public class DBManager implements AutoCloseable {
     }
 
     public Optional<List<Item>> searchItemsByName(String query) {
-        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM items WHERE LOWER(name) LIKE LOWER(?)")) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM archive WHERE LOWER(name) LIKE LOWER(?)")) {
             List<Item> items = new ArrayList<>();
             statement.setString(1,"%"+query+"%");
             ResultSet rs = statement.executeQuery();
@@ -319,13 +319,15 @@ public class DBManager implements AutoCloseable {
     }
 
     public boolean clearDatabase() {
-        try (PreparedStatement statement = connection.prepareStatement("TRUNCATE TABLE items")) {
+        try (PreparedStatement statement = connection.prepareStatement("TRUNCATE TABLE archive")) {
             statement.execute();
             return true;
         } catch (SQLException e) {
             return false;
         }
     }
+
+
 
     @Override
     public void close() throws Exception {

@@ -10,7 +10,7 @@
  \__|  \__|\__|  \__| \______/ \__|  \__| \______/  
                                                     
           ANOTHER SPACED REPETITION SYSTEM          
-                AnSRS Version 1.0.0                 
+                AnSRS Version 1.2.0                 
                                                     
 Author: Sairamkumar M
 Email: sairamkumar.m@outlook.com
@@ -49,6 +49,7 @@ Commands:
   recall    Loads items from database into WorkingSet for recall
   rollback  Rolls back items from completed state to WorkingSet state
   import    Import a csv into the database.
+  archive   Manage archive operations
 
 ========================================================
 Add Command
@@ -173,6 +174,27 @@ ITEM_TOTAL_RECALLS: Integer >= 0
                                or preserving db values in the even of duplicate
                                ITEM_IDs.
   -V, --version              Print version information and exit.
+
+========================================================
+Archive Command
+
+Usage: ansrs archive [-hV] [--all] [--list] [--restore-all] [--sure]
+                     [--add=ITEM_ID] [--delete=ITEM_ID] [--id=ITEM_ID]
+                     [--name=ITEM_NAME_QUERY] [--restore=ITEM_ID]
+Manage archive operations
+      --add=ITEM_ID       Move ITEM_ID from DB to archive
+      --all               Archive all items from DB (excluding those in sets)
+      --delete=ITEM_ID    Delete ITEM_ID from archive
+  -h, --help              Show this help message and exit.
+      --id=ITEM_ID        Get archived ITEM_ID details
+      --list              List all archived items
+      --name=ITEM_NAME_QUERY
+                          Search archived items by name
+      --restore=ITEM_ID   Restore ITEM_ID from archive to DB
+      --restore-all       Restore all items from archive to DB
+      --sure              Confirm destructive operation for --delete, --all,
+                            and --restore-all
+  -V, --version           Print version information and exit.
 
 ```
 

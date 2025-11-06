@@ -1,7 +1,6 @@
 package ansrs.cli;
 
 import ansrs.util.Log;
-import ansrs.util.Printer;
 import picocli.CommandLine.*;
 
 import java.util.concurrent.Callable;
@@ -43,7 +42,7 @@ public class DeleteCommand implements Callable<Integer> {
         validate();
         if (reset) {
             if (
-                    parent.db.clearDatabase() &&
+                    parent.itemDB.clearDatabase() &&
                             parent.completedSet.clearSet() &&
                             parent.workingSet.clearSet()
             ){
@@ -82,7 +81,7 @@ public class DeleteCommand implements Callable<Integer> {
 
 
         if (deleteFromDatabase) {
-            if (!parent.db.deleteItemsById(itemId)) {
+            if (!parent.itemDB.deleteItemsById(itemId)) {
                 Log.error("Error in deleting ITEM_ID [" + itemId + "] from DB, use --list to confirm its existence");
                 return 1;
             }
