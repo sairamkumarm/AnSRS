@@ -25,7 +25,7 @@ sessions immediately using predefined items, bypassing the usual initialization 
 There are 3 Store of data here.
 A WorkingSet, where Items set for recall during a session are stored.
 A CompletedSet, where items recalled, are stored, waiting to be commited.
-A Database, where items are persisted for further recollection.
+A Database, where items are persisted in normal storage and archived  for further recollection.
                             
 The tool is currently built for Windows only and compiled into a native binary for
 zero-dependency execution. Linux support can be added easily, but testing is pending.
