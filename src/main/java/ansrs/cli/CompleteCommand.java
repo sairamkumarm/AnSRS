@@ -2,7 +2,6 @@ package ansrs.cli;
 
 import ansrs.data.Item;
 import ansrs.util.Log;
-import ansrs.util.Printer;
 import picocli.CommandLine.*;
 
 import java.time.LocalDate;
@@ -60,7 +59,7 @@ public class CompleteCommand implements Callable<Integer> {
 
         if (!workingSetItemIds.contains(itemId)) {
             if (!force) throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID [" + itemId + "] doesn't exist in WorkingSet"));
-            Item item = parent.db.getItemById(itemId).
+            Item item = parent.itemDB.getItemById(itemId).
                     orElseThrow(
                             () -> new ParameterException(
                                     spec.commandLine(),
@@ -90,7 +89,7 @@ public class CompleteCommand implements Callable<Integer> {
             if (allComplete) {
                 throw new ParameterException(spec.commandLine(), Log.errorMsg("--all / -a flag can only be used when ITEM_ID is not specified"));
             }
-            if (!parent.db.contains(itemId)) {
+            if (!parent.itemDB.contains(itemId)) {
                 throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID [" + itemId + "] non-existent in database."));
             }
             if (poolString != null) {

@@ -1,5 +1,6 @@
 package ansrs.cli;
 
+import ansrs.db.ArchiveManager;
 import ansrs.set.WorkingSet;
 import ansrs.set.CompletedSet;
 import ansrs.db.DBManager;
@@ -12,20 +13,22 @@ import java.util.concurrent.Callable;
 
 @Command(name = "ansrs",
         description = "AnSRS (Pronounced \"Answers\") is a spaced repetition system.", version = """
-        AnSRS version 1.0.0 2025-11-01
+        AnSRS version 1.2.0
         """,
         mixinStandardHelpOptions = true,
         subcommands = {AddCommand.class, CompleteCommand.class, DeleteCommand.class,
-                CommitCommand.class, RecallCommand.class, RollbackCommand.class, ImportCommand.class})
+                CommitCommand.class, RecallCommand.class, RollbackCommand.class, ImportCommand.class, ArchiveCommand.class})
 public class SRSCommand implements Callable<Integer> {
     public final WorkingSet workingSet;
     public final CompletedSet completedSet;
-    public final DBManager db;
+    public final DBManager itemDB;
+    public final ArchiveManager archiveManager;
 
-    public SRSCommand(WorkingSet workingSet, CompletedSet completedSet, DBManager DBManager) {
+    public SRSCommand(WorkingSet workingSet, CompletedSet completedSet, DBManager DBManager, ArchiveManager archiveManager) {
         this.workingSet = workingSet;
         this.completedSet = completedSet;
-        this.db = DBManager;
+        this.itemDB = DBManager;
+        this.archiveManager = archiveManager;
     }
 
     @Spec
@@ -48,17 +51,17 @@ public class SRSCommand implements Callable<Integer> {
         validate();
         if (itemId != -12341234) {
             System.out.println("Item:");
-            Printer.printItem(db.getItemById(itemId).orElse(null));
+            Printer.printItem(itemDB.getItemById(itemId).orElse(null));
         }
         if (!itemName.equals("zyxwvutsrqp")) {
             System.out.println("Search: " + itemName);
-            Printer.printItemsList(db.searchItemsByName(itemName.trim()).orElse(new ArrayList<>()));
+            Printer.printItemsList(itemDB.searchItemsByName(itemName.trim()).orElse(new ArrayList<>()));
         }
         if (list) {
             if (set) {
-                Printer.setStatePrinter(workingSet, completedSet, db);
+                Printer.setStatePrinter(workingSet, completedSet, itemDB);
             } else {
-                Printer.statePrinter(workingSet, completedSet, db);
+                Printer.statePrinter(workingSet, completedSet, itemDB);
             }
         }
         return 0;

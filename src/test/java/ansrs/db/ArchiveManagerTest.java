@@ -2,21 +2,21 @@ package ansrs.db;
 
 import ansrs.data.Item;
 import org.junit.jupiter.api.*;
-import java.nio.file.Path;
+
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-class DBManagerTest {
+class ArchiveManagerTest {
 
-    static DBManager db;
+    static ArchiveManager am;
     static Item baseItem;
 
     @BeforeAll
     static void setup() {
         try {
-            db = new DBManager("mem:testdb");
+            am = new ArchiveManager("mem:testam");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -25,18 +25,18 @@ class DBManagerTest {
 
     @AfterEach
     void clear() {
-        db.clearDatabase();
+        am.clearDatabase();
     }
 
     @AfterAll
     static void teardown() throws Exception {
-        db.close();
+        am.close();
     }
 
     @Test
     void testInsertAndGetItemById() {
-        assertTrue(db.insertItem(baseItem));
-        Optional<Item> fetched = db.getItemById(1);
+        assertTrue(am.insertItem(baseItem));
+        Optional<Item> fetched = am.getItemById(1);
         assertTrue(fetched.isPresent());
         assertEquals("Item1", fetched.get().getItemName());
     }
@@ -47,61 +47,61 @@ class DBManagerTest {
                 baseItem,
                 new Item(2, "Two", "https://b.com", Item.Pool.M, LocalDate.now(), 3)
         );
-        assertTrue(db.insertItemsBatch(items));
-        List<Item> dbItems = db.getAllItems().orElse(Collections.emptyList());
-        assertEquals(2, dbItems.size());
+        assertTrue(am.insertItemsBatch(items));
+        List<Item> amItems = am.getAllItems().orElse(Collections.emptyList());
+        assertEquals(2, amItems.size());
     }
 
     @Test
     void testUpsertItemsBatch() {
         List<Item> items = List.of(baseItem);
-        db.insertItemsBatch(items);
+        am.insertItemsBatch(items);
 
         List<Item> updated = List.of(
                 new Item(1, "Updated", "https://a.com", Item.Pool.H, LocalDate.now(), 4)
         );
-        assertTrue(db.upsertItemsBatch(updated));
+        assertTrue(am.upsertItemsBatch(updated));
 
-        Item fetched = db.getItemById(1).get();
+        Item fetched = am.getItemById(1).get();
         assertEquals("Updated", fetched.getItemName());
         assertEquals(4, fetched.getTotalRecalls());
     }
 
     @Test
     void testUpdateItemsBatch() {
-        db.insertItem(baseItem);
+        am.insertItem(baseItem);
         List<Item> updates = List.of(
                 new Item(1, "Mod", "https://a.com", Item.Pool.H, LocalDate.now(), 9)
         );
-        assertTrue(db.updateItemsBatch(updates));
+        assertTrue(am.updateItemsBatch(updates));
 
-        Item fetched = db.getItemById(1).get();
+        Item fetched = am.getItemById(1).get();
         assertEquals("Mod", fetched.getItemName());
         assertEquals(9, fetched.getTotalRecalls());
     }
 
     @Test
     void testDeleteAndContains() {
-        db.insertItem(baseItem);
-        assertTrue(db.contains(1));
-        assertTrue(db.deleteItemsById(1));
-        assertFalse(db.contains(1));
+        am.insertItem(baseItem);
+        assertTrue(am.contains(1));
+        assertTrue(am.deleteItemsById(1));
+        assertFalse(am.contains(1));
     }
 
     @Test
     void testGetAllItemsIds() {
-        db.insertItem(baseItem);
-        db.insertItem(new Item(2, "Second", "https://b.com", Item.Pool.L, LocalDate.now(), 0));
-        Optional<HashSet<Integer>> ids = db.getAllItemsIds();
+        am.insertItem(baseItem);
+        am.insertItem(new Item(2, "Second", "https://b.com", Item.Pool.L, LocalDate.now(), 0));
+        Optional<HashSet<Integer>> ids = am.getAllItemsIds();
         assertTrue(ids.isPresent());
         assertTrue(ids.get().containsAll(List.of(1, 2)));
     }
 
     @Test
     void testGetItemsFromList() {
-        db.insertItem(baseItem);
-        db.insertItem(new Item(2, "Other", "https://b.com", Item.Pool.M, LocalDate.now(), 1));
-        Optional<List<Item>> list = db.getItemsFromList(List.of(1, 2));
+        am.insertItem(baseItem);
+        am.insertItem(new Item(2, "Other", "https://b.com", Item.Pool.M, LocalDate.now(), 1));
+        Optional<List<Item>> list = am.getItemsFromList(List.of(1, 2));
         assertTrue(list.isPresent());
         assertEquals(2, list.get().size());
     }
@@ -111,21 +111,21 @@ class DBManagerTest {
         Item i1 = new Item(1, "AlphaWidget", "https://a.com", Item.Pool.H, LocalDate.now(), 2);
         Item i2 = new Item(2, "BetaTool", "https://b.com", Item.Pool.M, LocalDate.now(), 1);
         Item i3 = new Item(3, "GammaWidget", "https://c.com", Item.Pool.L, LocalDate.now(), 0);
-        db.insertItemsBatch(List.of(i1, i2, i3));
+        am.insertItemsBatch(List.of(i1, i2, i3));
 
-        Optional<List<Item>> result1 = db.searchItemsByName("widget");
+        Optional<List<Item>> result1 = am.searchItemsByName("widget");
         assertTrue(result1.isPresent());
         List<Item> matches = result1.get();
         assertEquals(2, matches.size());
         assertTrue(matches.stream().anyMatch(i -> i.getItemName().equals("AlphaWidget")));
         assertTrue(matches.stream().anyMatch(i -> i.getItemName().equals("GammaWidget")));
 
-        Optional<List<Item>> result2 = db.searchItemsByName("beta");
+        Optional<List<Item>> result2 = am.searchItemsByName("beta");
         assertTrue(result2.isPresent());
         assertEquals(1, result2.get().size());
         assertEquals("BetaTool", result2.get().get(0).getItemName());
 
-        Optional<List<Item>> result3 = db.searchItemsByName("nonexistent");
+        Optional<List<Item>> result3 = am.searchItemsByName("nonexistent");
         assertTrue(result3.isPresent());
         assertTrue(result3.get().isEmpty());
     }
@@ -133,8 +133,8 @@ class DBManagerTest {
 
     @Test
     void testClearDatabase() {
-        db.insertItem(baseItem);
-        assertTrue(db.clearDatabase());
-        assertEquals(0, db.getAllItems().get().size());
+        am.insertItem(baseItem);
+        assertTrue(am.clearDatabase());
+        assertEquals(0, am.getAllItems().get().size());
     }
 }

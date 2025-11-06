@@ -54,14 +54,14 @@ public class RecallCommand implements Callable<Integer> {
             }
         }
         if (validCustomRecallIds.isEmpty()){
-            RecallService recallService = createRecallService(parent.db);
+            RecallService recallService = createRecallService(parent.itemDB);
             workingSetItems.addAll(recallService.recall(recallCount));
         } else {
             workingSetItems.addAll(validCustomRecallIds);
         }
         parent.workingSet.fillSet(workingSetItems);
         Log.info(workingSetItems.size() + " items in WorkingSet");
-        List<Item> list = parent.db.getItemsFromList(workingSetItems.stream().toList()).orElse(new ArrayList<>());
+        List<Item> list = parent.itemDB.getItemsFromList(workingSetItems.stream().toList()).orElse(new ArrayList<>());
         Printer.printItemsList(list);
         return 0;
     }
@@ -78,7 +78,7 @@ public class RecallCommand implements Callable<Integer> {
             if (customRecallIds.size()==1){
                 for (int id: customRecallIds){
                     if (id<=0) throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID cannot be non-positive"));
-                    else if (!parent.db.contains(id)){
+                    else if (!parent.itemDB.contains(id)){
                         throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID["+id+"] is non-existent in database"));
                     }
                      else {
@@ -88,7 +88,7 @@ public class RecallCommand implements Callable<Integer> {
             } else {
                 for (int id : customRecallIds) {
                     if (id<=0) Log.warn("ITEM_ID cannot be non-positive, ignoring");
-                    else if (!parent.db.contains(id)) {
+                    else if (!parent.itemDB.contains(id)) {
                         Log.warn("ITEM_ID[" + id + "] non existent in database, ignoring");
                     } else {
                         validCustomRecallIds.add(id);

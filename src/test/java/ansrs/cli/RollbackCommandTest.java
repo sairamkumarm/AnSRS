@@ -1,6 +1,7 @@
 package ansrs.cli;
 
 import ansrs.data.Item;
+import ansrs.db.ArchiveManager;
 import ansrs.db.DBManager;
 import ansrs.set.CompletedSet;
 import ansrs.set.WorkingSet;
@@ -22,6 +23,7 @@ class RollbackCommandTest {
     private WorkingSet workingSet;
     private CompletedSet completedSet;
     private DBManager db;
+    private ArchiveManager am;
     private SRSCommand parent;
     private RollbackCommand cmd;
     private CommandLine cmdLine;
@@ -32,8 +34,8 @@ class RollbackCommandTest {
         workingSet = spy(new WorkingSet(tempDir.resolve("working.set")));
         completedSet = spy(new CompletedSet(tempDir.resolve("completed.set")));
         db = mock(DBManager.class);
-
-        parent = new SRSCommand(workingSet, completedSet, db);
+        am= mock(ArchiveManager.class);
+        parent = new SRSCommand(workingSet, completedSet, db, am);
         cmd = new RollbackCommand();
         cmdLine = new CommandLine(cmd);
         cmd.parent = parent;
@@ -125,7 +127,7 @@ class RollbackCommandTest {
         };
 
         WorkingSet spyWorking = workingSet;
-        SRSCommand customParent = new SRSCommand(spyWorking, badCompleted, db);
+        SRSCommand customParent = new SRSCommand(spyWorking, badCompleted, db, am);
         RollbackCommand customCmd = new RollbackCommand();
         CommandLine cl = new CommandLine(customCmd);
         customCmd.parent = customParent;

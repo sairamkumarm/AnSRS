@@ -1,5 +1,6 @@
 package ansrs.cli;
 
+import ansrs.db.ArchiveManager;
 import ansrs.db.DBManager;
 import ansrs.set.CompletedSet;
 import ansrs.set.WorkingSet;
@@ -19,6 +20,7 @@ class DeleteCommandTest {
     private WorkingSet workingSet;
     private CompletedSet completedSet;
     private DBManager db;
+    private ArchiveManager am;
     private SRSCommand parent;
     private DeleteCommand cmd;
     private CommandLine cmdLine;
@@ -29,8 +31,8 @@ class DeleteCommandTest {
         workingSet = spy(new WorkingSet(tempDir.resolve("working.set")));
         completedSet = spy(new CompletedSet(tempDir.resolve("completed.set")));
         db = mock(DBManager.class);
-
-        parent = new SRSCommand(workingSet, completedSet, db);
+        am= mock(ArchiveManager.class);
+        parent = new SRSCommand(workingSet, completedSet, db, am);
         cmd = new DeleteCommand();
         cmdLine = new CommandLine(cmd);
         cmd.parent = parent;

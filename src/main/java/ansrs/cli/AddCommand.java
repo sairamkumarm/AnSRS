@@ -95,7 +95,7 @@ public class AddCommand implements Callable<Integer> {
             throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_TOTAL_RECALLS must be non-negative"));
 
         Item item = new Item(itemId, itemName, itemLink, poolEnum, lastRecall, recalls);
-        if (!parent.db.insertItem(item)) {
+        if (!parent.itemDB.insertItem(item)) {
             Log.error("Insert failed, check for duplicate ID: " + item);
             return 1;
         }
@@ -114,7 +114,7 @@ public class AddCommand implements Callable<Integer> {
                     Log.errorMsg("No update fields specified. Use one or more of --name, --link, --pool, --last-recall, --total-recalls"));
         }
 
-        Item existing = parent.db.getItemById(itemId).orElse(null);
+        Item existing = parent.itemDB.getItemById(itemId).orElse(null);
         if (existing == null) {
             Log.error("No item found with ID: " + itemId);
             return 1;
@@ -146,7 +146,7 @@ public class AddCommand implements Callable<Integer> {
             existing.setTotalRecalls(totalRecalls);
         }
 
-        if (!parent.db.updateItem(existing)) {
+        if (!parent.itemDB.updateItem(existing)) {
             Log.error("Update failed: " + existing);
             return 1;
         }

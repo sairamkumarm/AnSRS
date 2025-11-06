@@ -1,6 +1,7 @@
 package ansrs.cli;
 
 import ansrs.data.Item;
+import ansrs.db.ArchiveManager;
 import ansrs.db.DBManager;
 import ansrs.service.RecallService;
 import ansrs.set.CompletedSet;
@@ -22,6 +23,7 @@ class RecallCommandTest {
     private WorkingSet workingSet;
     private CompletedSet completedSet;
     private DBManager db;
+    private ArchiveManager am;
     private SRSCommand parent;
     private RecallCommand cmd;
     private CommandLine cmdLine;
@@ -32,8 +34,8 @@ class RecallCommandTest {
         workingSet = spy(new WorkingSet(tempDir.resolve("working.set")));
         completedSet = spy(new CompletedSet(tempDir.resolve("completed.set")));
         db = mock(DBManager.class);
-
-        parent = new SRSCommand(workingSet, completedSet, db);
+        am= mock(ArchiveManager.class);
+        parent = new SRSCommand(workingSet, completedSet, db, am);
         cmd = spy(new RecallCommand());
         cmdLine = new CommandLine(cmd);
         cmd.parent = parent;
