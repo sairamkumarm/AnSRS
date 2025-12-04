@@ -71,26 +71,45 @@ class RecallCommandTest {
         doReturn(List.of(3, 4)).when(mockService).recall(2);
         doReturn(mockService).when(cmd).createRecallService(any());
 
-        assertEquals(0, cmdLine.execute("2", "--force", "--append"));
+        assertEquals(0, cmdLine.execute("2", "--append"));
         verify(workingSet, atLeastOnce()).fillSet(anySet());
         assertTrue(workingSet.getItemIdSet().containsAll(Set.of(1, 2, 3, 4)));
     }
 
     @Test
-    void testRecallOverwritesWhenForceUsedWithoutAppend() {
+    void testRecallOverwritesWhenForceUsed() {
         workingSet.fillSet(Set.of(10, 20));
         RecallService mockService = mock(RecallService.class);
         doReturn(List.of(30, 40)).when(mockService).recall(2);
         doReturn(mockService).when(cmd).createRecallService(any());
 
-        assertEquals(0, cmdLine.execute("2", "--force"));
+        assertEquals(0, cmdLine.execute("2", "--overwrite"));
         verify(workingSet, atLeastOnce()).fillSet(anySet());
         assertTrue(workingSet.getItemIdSet().containsAll(Set.of(30, 40)));
         assertFalse(workingSet.getItemIdSet().contains(10));
     }
 
 
+
     // --- VALIDATION FAILURES ---
+
+    @Test
+    void testRecallOnNonEmptyWorkingSetWithoutFlags() {
+        workingSet.fillSet(Set.of(10,20));
+        assertEquals(2, cmdLine.execute("2"));
+    }
+
+    @Test
+    void testCustomRecallOnNonEmptyWorkingSetWithoutFlags() {
+        workingSet.fillSet(Set.of(10,20));
+        when(db.contains(3)).thenReturn(true);
+        when(db.contains(4)).thenReturn(true);
+        assertEquals(2, cmdLine.execute("--custom","3","4"));
+    }
+        @Test
+    void testRecallOverwritesUsedWithAppend() {
+        assertEquals(2, cmdLine.execute("2", "--overwrite", "--append"));
+    }
 
     @Test
     void testNegativeRecallCount() {
@@ -111,23 +130,23 @@ class RecallCommandTest {
 
     // --- EDGE CASES ---
 
-    @Test
-    void testAppendFlagWithoutForceStillFails() {
-        workingSet.fillSet(Set.of(1));
-        when(db.getAllItems()).thenReturn(Optional.of(List.of(new Item())));
-        assertEquals(2, cmdLine.execute("2", "--append"));
-    }
+//    @Test
+//    void testAppendFlagWithoutForceStillFails() {
+//        workingSet.fillSet(Set.of(1));
+//        when(db.getAllItems()).thenReturn(Optional.of(List.of(new Item())));
+//        assertEquals(2, cmdLine.execute("2", "--append"));
+//    }
 
-    @Test
-    void testForceAndAppendBothAppliedWorks() {
-        workingSet.fillSet(Set.of(5));
-        RecallService mockService = mock(RecallService.class);
-        doReturn(List.of(6, 7)).when(mockService).recall(2);
-        doReturn(mockService).when(cmd).createRecallService(any());
-
-        assertEquals(0, cmdLine.execute("2", "--force", "--append"));
-        assertTrue(workingSet.getItemIdSet().containsAll(Set.of(5, 6, 7)));
-    }
+//    @Test
+//    void testForceAndAppendBothAppliedWorks() {
+//        workingSet.fillSet(Set.of(5));
+//        RecallService mockService = mock(RecallService.class);
+//        doReturn(List.of(6, 7)).when(mockService).recall(2);
+//        doReturn(mockService).when(cmd).createRecallService(any());
+//
+//        assertEquals(0, cmdLine.execute("2", "--force", "--append"));
+//        assertTrue(workingSet.getItemIdSet().containsAll(Set.of(5, 6, 7)));
+//    }
 
     // --- CUSTOM ITEM RECALL CASES ---
 

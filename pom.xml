@@ -7,7 +7,7 @@
     <groupId>dev.ansrs</groupId>
     <artifactId>ansrs</artifactId>
 <!--remember to change version in code banner, readme, and srs command definition-->
-    <version>1.2.0</version>
+    <version>1.2.1</version>
 <!--remember to change version in code banner, readme, and srs command definition-->
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

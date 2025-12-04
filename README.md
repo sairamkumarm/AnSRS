@@ -10,7 +10,7 @@
  \__|  \__|\__|  \__| \______/ \__|  \__| \______/  
                                                     
           ANOTHER SPACED REPETITION SYSTEM          
-                AnSRS Version 1.2.0                 
+                AnSRS Version 1.2.1                 
                                                     
 Author: Sairamkumar M
 Email: sairamkumar.m@outlook.com
@@ -77,7 +77,6 @@ total_recalls
       --total-recalls=ITEM_TOTAL_RECALLS
                          Set custom total recall count
   -u, --update           Update an existing item
-  -V, --version          Print version information and exit.
 
 ========================================================
 Complete Command
@@ -96,7 +95,6 @@ Marks item as completed, and transfers them to the CompletedSet
   -h, --help               Show this help message and exit.
       --update=ITEM_POOL   Optional ITEM_POOL value updated for item, choose
                              from H M and L
-  -V, --version            Print version information and exit.
 
 ========================================================
 Delete Command
@@ -113,7 +111,6 @@ it removes from WorkingSet
   -h, --help            Show this help message and exit.
       --hard-reset      Hard resets all the persistent data, sets included
       --sure            A defensive fallback to prevent accidental deletions
-  -V, --version         Print version information and exit.
       --working-all     Removes all items from WorkingSet
 
 ========================================================
@@ -124,7 +121,6 @@ Save completed items in WorkingSet to the database
   -f, --force     allows you to commit when there are pending items in the
                     WorkingSet
   -h, --help      Show this help message and exit.
-  -V, --version   Print version information and exit.
 
 ========================================================
 Recall Command
@@ -137,9 +133,8 @@ Loads items from database or custom items into WorkingSet for recall
   -c, --custom=ITEM_ID[,ITEM_ID...]...
                      Custom ITEM_ID(s) to recall, use space or comma separated
                        values
-  -f, --force        Overwrite existing non-empty WorkingSet
+  -o, --overwrite    Overwrite existing non-empty WorkingSet
   -h, --help         Show this help message and exit.
-  -V, --version      Print version information and exit.
 
 ========================================================
 Rollback Command
@@ -149,7 +144,6 @@ Rolls back items from completed state to WorkingSet state
       ITEM_ID     Unique identifier of an item
   -a, --all       Rollback all items from WorkingSet
   -h, --help      Show this help message and exit.
-  -V, --version   Print version information and exit.
 
 ========================================================
 Import Command
@@ -173,7 +167,6 @@ ITEM_TOTAL_RECALLS: Integer >= 0
                              [csv/db] Pick between overwriting csv values in db
                                or preserving db values in the even of duplicate
                                ITEM_IDs.
-  -V, --version              Print version information and exit.
 
 ========================================================
 Archive Command
@@ -194,7 +187,6 @@ Manage archive operations
       --restore-all       Restore all items from archive to DB
       --sure              Confirm destructive operation for --delete, --all,
                             and --restore-all
-  -V, --version           Print version information and exit.
 
 ```
 

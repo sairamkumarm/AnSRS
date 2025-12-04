@@ -25,8 +25,8 @@ public class RecallCommand implements Callable<Integer> {
     @Parameters(index = "0", paramLabel = "RECALL_COUNT", description = "The amount of items to load into WorkingSet for recall", defaultValue = "-12341234")
     private int recallCount;
 
-    @Option(names = {"-f", "--force"}, description = "Overwrite existing non-empty WorkingSet")
-    private boolean force;
+    @Option(names = {"-o", "--overwrite"}, description = "Overwrite existing non-empty WorkingSet")
+    private boolean overwrite;
 
     @Option(names = {"-a", "--append"}, description = "Append to an existing non empty WorkingSet, only unique items are added")
     private boolean append;
@@ -44,9 +44,9 @@ public class RecallCommand implements Callable<Integer> {
 //        System.out.println(customRecallIds);
         Set<Integer> workingSetItems = parent.workingSet.getItemIdSet();
         if (!workingSetItems.isEmpty()) {
-            if (!force)
-                throw new ParameterException(spec.commandLine(), Log.errorMsg("WorkingSet non-empty, use --force with or without --append to bypass"));
-            if (!append) {
+            if (!overwrite && !append)
+                throw new ParameterException(spec.commandLine(), Log.errorMsg("WorkingSet non-empty, use --overwrite or --append to bypass"));
+            if (overwrite) {
                 workingSetItems.clear();
                 Log.info("Overwriting existing WorkingSet");
             } else {
@@ -96,6 +96,9 @@ public class RecallCommand implements Callable<Integer> {
                 }
                 if (validCustomRecallIds.isEmpty()) throw new ParameterException(spec.commandLine(), Log.errorMsg("No valid ITEM_IDs to recall"));
             }
+        }
+        if (overwrite && append){
+            throw new ParameterException(spec.commandLine(), Log.errorMsg("Cannot use --overwrite and --append at once."));
         }
     }
 }

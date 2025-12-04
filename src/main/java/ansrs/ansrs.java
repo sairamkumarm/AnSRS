@@ -50,7 +50,7 @@ public class ansrs {
                         \\__|  \\__|\\__|  \\__| \\______/ \\__|  \\__| \\______/ \s
                                                                           \s
                                  ANOTHER SPACED REPETITION SYSTEM         \s
-                                       AnSRS Version 1.2.0                \s
+                                       AnSRS Version 1.2.1                \s
                                                                           \s
                        """;
 

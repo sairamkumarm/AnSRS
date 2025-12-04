@@ -13,7 +13,7 @@ import java.util.concurrent.Callable;
 
 @Command(name = "ansrs",
         description = "AnSRS (Pronounced \"Answers\") is a spaced repetition system.", version = """
-        AnSRS version 1.2.0
+        AnSRS version 1.2.1
         """,
         mixinStandardHelpOptions = true,
         subcommands = {AddCommand.class, CompleteCommand.class, DeleteCommand.class,
