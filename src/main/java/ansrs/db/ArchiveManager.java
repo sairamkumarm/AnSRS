@@ -13,42 +13,8 @@ import java.util.stream.Collectors;
 public class ArchiveManager implements AutoCloseable{
     private final Connection connection;
 
-    public ArchiveManager(Path path){
-        try {
-            if (!Files.exists(path.getParent())){
-                Files.createDirectories(path.getParent());
-            }
-            String url="jdbc:h2:file:" + path.toAbsolutePath();
-            connection = DriverManager.getConnection(url, "sa", "");
-            initTable();
-        } catch (IOException e) {
-            throw new RuntimeException(Log.errorMsg("Failed to load database"));
-        } catch (SQLException e) {
-            throw new RuntimeException(Log.errorMsg("Failed to connect to database"), e);
-        }
-    }
-
-    //test purpose only
-    public ArchiveManager(String mockTestDBNameAndPath) throws SQLException {
-        connection = DriverManager.getConnection("jdbc:h2:" + mockTestDBNameAndPath, "ta", "");
-        initTable();
-    }
-
-    public void initTable() {
-        try (PreparedStatement statement = connection.prepareStatement("""
-                CREATE TABLE IF NOT EXISTS archive(
-                    id INTEGER PRIMARY KEY,
-                    name VARCHAR(255),
-                    link VARCHAR(255),
-                    pool CHARACTER,
-                    last_recall VARCHAR(255),
-                    total_recalls INTEGER
-                )
-                """)) {
-            statement.execute();
-        } catch (SQLException e) {
-            throw new RuntimeException(Log.errorMsg("Error initialising archive table"),e);
-        }
+    public ArchiveManager(Connection connection){
+        this.connection = connection;
     }
 
     public boolean insertItem(Item item) {
@@ -331,6 +297,6 @@ public class ArchiveManager implements AutoCloseable{
 
     @Override
     public void close() throws Exception {
-        connection.close();
+        if (connection != null && !connection.isClosed()) connection.close();
     }
 }

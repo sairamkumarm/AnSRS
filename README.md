@@ -1,3 +1,5 @@
+# AnSRS: Another Spaced Repetition System
+
 ```
                                                     
   $$$$$$\             $$$$$$\  $$$$$$$\   $$$$$$\   
@@ -9,8 +11,8 @@
  $$ |  $$ |$$ |  $$ |\$$$$$$  |$$ |  $$ |\$$$$$$  | 
  \__|  \__|\__|  \__| \______/ \__|  \__| \______/  
                                                     
-          ANOTHER SPACED REPETITION SYSTEM          
-                AnSRS Version 1.2.1                 
+ ANOTHER SPACED REPETITION SYSTEM          
+ AnSRS Version 1.3.0-SNAPSHOT                 
                                                     
 Author: Sairamkumar M
 Email: sairamkumar.m@outlook.com
@@ -189,8 +191,20 @@ Manage archive operations
                             and --restore-all
 
 ```
-
-Planned Additions
+## Build steps
+### Package the project
+```shell
+mvn clean package
+```
+### Optional trace(for changes that use reflection)
+```shell
+& "$env:GRAALVM_HOME\bin\java" -agentlib:native-image-agent=config-output-dir=src/main/resources/META-INF/native-image/ -jar target/ansrs-{version}.jar
+```
+### Build the exe
+```shell
+native-image --no-fallback -jar ./target/ansrs-{version}.jar ansrs
+```
+## Planned Additions
 - [ ] Export Command
 - [ ] Stats Command
 - [ ] Configuration File for Recall Algorithm

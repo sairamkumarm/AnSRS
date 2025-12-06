@@ -13,42 +13,8 @@ import java.util.stream.Collectors;
 public class DBManager implements AutoCloseable {
     private final Connection connection;
 
-    public DBManager(Path dbPath) {
-        try {
-            if (!Files.exists(dbPath.getParent())) {
-                Files.createDirectories(dbPath.getParent());
-            }
-            String url = "jdbc:h2:file:" + dbPath.toAbsolutePath();
-            connection = DriverManager.getConnection(url, "sa", "");
-            initTable();
-        } catch (SQLException e) {
-            throw new RuntimeException(Log.errorMsg("Failed to connect to database"), e);
-        } catch (IOException e) {
-            throw new RuntimeException(Log.errorMsg("Failed to load database"), e);
-        }
-    }
-
-    //test purpose only
-    public DBManager(String mockTestDBNameAndPath) throws SQLException {
-        connection = DriverManager.getConnection("jdbc:h2:" + mockTestDBNameAndPath, "ta", "");
-        initTable();
-    }
-
-    public void initTable() {
-        try (PreparedStatement statement = connection.prepareStatement("""
-                CREATE TABLE IF NOT EXISTS items(
-                    id INTEGER PRIMARY KEY,
-                    name VARCHAR(255),
-                    link VARCHAR(255),
-                    pool CHARACTER,
-                    last_recall VARCHAR(255),
-                    total_recalls INTEGER
-                )
-                """)) {
-            statement.execute();
-        } catch (SQLException e) {
-            throw new RuntimeException(Log.errorMsg("Error initialising item table"),e);
-        }
+    public DBManager(Connection connection) {
+        this.connection=connection;
     }
 
     public boolean insertItem(Item item) {
@@ -329,6 +295,6 @@ public class DBManager implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        connection.close();
+        if (connection != null && !connection.isClosed()) connection.close();
     }
 }
