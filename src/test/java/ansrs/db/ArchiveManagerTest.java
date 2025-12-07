@@ -3,7 +3,7 @@ package ansrs.db;
 import ansrs.data.Item;
 import org.junit.jupiter.api.*;
 
-import java.sql.SQLException;
+import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,11 +15,8 @@ class ArchiveManagerTest {
 
     @BeforeAll
     static void setup() {
-        try {
-            am = new ArchiveManager("mem:testam");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        Connection connection = DatabaseInitialiser.initInMemoryDb("testdb");
+        am = new ArchiveManager(connection);
         baseItem = new Item(1, "Item1", "https://a.com", Item.Pool.H, LocalDate.now(), 2);
     }
 

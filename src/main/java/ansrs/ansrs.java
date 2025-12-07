@@ -21,10 +21,12 @@
 package ansrs;
 
 import ansrs.db.ArchiveManager;
+import ansrs.db.DatabaseInitialiser;
 import ansrs.set.WorkingSet;
 import ansrs.set.CompletedSet;
 import ansrs.cli.SRSCommand;
 import ansrs.db.DBManager;
+import ansrs.util.Banner;
 import ansrs.util.Log;
 import ansrs.util.Printer;
 import picocli.CommandLine;
@@ -32,6 +34,7 @@ import picocli.CommandLine;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.util.ArrayList;
 
 public class ansrs {
@@ -55,66 +58,13 @@ public class ansrs {
 
             WorkingSet workingSet = new WorkingSet(workingSetPath);
             CompletedSet completedSet = new CompletedSet(completedSetPath);
-            DBManager db = new DBManager(databasePath);
-            ArchiveManager archiveManager = new ArchiveManager(databasePath);
+            Connection conn = DatabaseInitialiser.initEmbeddedDb(databasePath);
+            DBManager db = new DBManager(conn);
+            ArchiveManager archiveManager = new ArchiveManager(conn);
             if (args.length == 0) {
-                String banner = """
-                                                                          \s
-                         $$$$$$\\             $$$$$$\\  $$$$$$$\\   $$$$$$\\  \s
-                        $$  __$$\\           $$  __$$\\ $$  __$$\\ $$  __$$\\ \s
-                        $$ |  $$ |$$$$$$$\\  $$ |  \\__|$$ |  $$ |$$ |  \\__|\s
-                        $$$$$$$$ |$$  __$$\\ \\$$$$$$\\  $$$$$$$  |\\$$$$$$\\  \s
-                        $$  __$$ |$$ |  $$ | \\____$$\\ $$  __$$<  \\____$$\\ \s
-                        $$ |  $$ |$$ |  $$ |$$\\   $$ |$$ |  $$ |$$\\   $$ |\s
-                        $$ |  $$ |$$ |  $$ |\\$$$$$$  |$$ |  $$ |\\$$$$$$  |\s
-                        \\__|  \\__|\\__|  \\__| \\______/ \\__|  \\__| \\______/ \s
-                                                                          \s
-                                 ANOTHER SPACED REPETITION SYSTEM         \s
-                                       AnSRS Version 1.2.1                \s
-                                                                          \s
-                       """;
-
-                String coloredBanner = colorizeBanner(banner);
-                System.out.println(coloredBanner);
+                Banner.colorrizedBanner("1.3.0-SNAPSHOT");
                 if (workingSet.getItemIdSet().isEmpty()) {
-                    System.out.println("""
-                            Author: Sairamkumar M
-                            Email: sairamkumar.m@outlook.com
-                            Github: https://github.com/sairamkumarm/AnSRS
-                            
-                            AnSRS (Pronounced "Answers") is a spaced repetition system.
-                            ansrs is a command-line spaced repetition system designed for quick item tracking and recall
-                            scheduling. It uses a lightweight local database to manage three sets: working, completed,
-                            and recall. The system supports a jump-start feature that allows new users to begin recall
-                            sessions immediately using predefined items, bypassing the usual initialization delay.
-                            
-                            There are 3 Store of data here.
-                            A WorkingSet, where Items set for recall during a session are stored.
-                            A CompletedSet, where items recalled, are stored, waiting to be commited.
-                            A Database, where items are persisted in normal storage and archived for further recollection.
-                            
-                            Usage: ansrs [-hlsV] [-i=ITEM_ID] [-n=ITEM_NAME_QUERY] [COMMAND]
-
-                              -h, --help         Show this help message and exit.
-                              -i, --id=ITEM_ID   Print a specific Item
-                              -l, --list         Lists set and db state
-                              -n, --name=ITEM_NAME_QUERY
-                                                 Find an Item by it's name, query must be longer than one
-                                                   character
-                              -s, --set          Use this flag with --list to print only set
-                              -V, --version      Print version information and exit.
-                            Commands:
-                              add       Add new items into the item database or update an existing one
-                              complete  Marks item as completed, and transfers them to the CompletedSet
-                              delete    Remove from WorkingSet, CompletedSet and db, depending on the
-                                          flags, by default it removes from WorkingSet
-                              commit    Save completed items in WorkingSet to the database
-                              recall    Loads items from database into WorkingSet for recall
-                              rollback  Rolls back items from completed state to WorkingSet state
-                              import    Import a csv into the database.
-                              archive   Manage archive operations
-                            
-                            """);
+                    Banner.initHelp();
                 } else {
                     System.out.println("Current WorkingSet:");
                     Printer.printItemsList(db.getItemsFromList(workingSet.getItemIdList()).orElse(new ArrayList<>()));
@@ -123,31 +73,13 @@ public class ansrs {
             SRSCommand root = new SRSCommand(workingSet, completedSet, db, archiveManager);
             int exitCode = new CommandLine(root).execute(args);
             db.close();
+            archiveManager.close();
             System.exit(exitCode);
         } catch (IOException e) {
             throw new RuntimeException(Log.errorMsg("Error initializing environment"), e);
         } catch (Exception e) {
-            throw new RuntimeException(Log.errorMsg(e.getMessage()));
+            throw new RuntimeException(Log.errorMsg("Fatal Startup Error"),e);
         }
     }
 
-    public static String colorizeBanner(String banner) {
-        String foreground = "\u001B[97m";
-        String background = "\u001B[107m";
-        String reset = "\u001B[0m";
-        String accent = "\u001B[92m";
-        String blackBg = "\u001B[40m";
-        banner = banner.replace("$", foreground + background + "$" + reset)
-                .replace("\\", accent + blackBg + "\\" + reset)
-                .replace("/", accent + blackBg + "/" + reset)
-                .replace("_", accent + blackBg + "_" + reset)
-                .replace("|", accent + blackBg + "|" + reset)
-                .replace("<", accent + blackBg + "<" + reset)
-                .replace(" ", accent + blackBg + " ")
-                .replace("\n", reset + "\n" + accent + blackBg)
-                .replace("=", accent + blackBg + "=");
-
-        banner = banner+reset;
-        return banner;
-    }
 }

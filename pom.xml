@@ -7,7 +7,7 @@
     <groupId>dev.ansrs</groupId>
     <artifactId>ansrs</artifactId>
 <!--remember to change version in code banner, readme, and srs command definition-->
-    <version>1.2.1</version>
+    <version>1.3.0-SNAPSHOT</version>
 <!--remember to change version in code banner, readme, and srs command definition-->
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -71,8 +71,16 @@
             <version>3.26.0</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>11.18.0</version>
+        </dependency>
     </dependencies>
     <build>
+        <finalName>${artifactId}-${version}</finalName>
         <plugins>
             <!-- https://mvnrepository.com/artifact/org.codehaus.mojo/exec-maven-plugin -->
             <plugin>

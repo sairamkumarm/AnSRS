@@ -2,8 +2,8 @@ package ansrs.db;
 
 import ansrs.data.Item;
 import org.junit.jupiter.api.*;
-import java.nio.file.Path;
-import java.sql.SQLException;
+
+import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,11 +15,8 @@ class DBManagerTest {
 
     @BeforeAll
     static void setup() {
-        try {
-            db = new DBManager("mem:testdb");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        Connection conn = DatabaseInitialiser.initInMemoryDb("testdb");
+        db = new DBManager(conn);
         baseItem = new Item(1, "Item1", "https://a.com", Item.Pool.H, LocalDate.now(), 2);
     }
 
