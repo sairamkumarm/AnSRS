@@ -1,9 +1,10 @@
 package ansrs.cli;
 
-import ansrs.db.ArchiveManager;
+import ansrs.db.ArchiveRepository;
+import ansrs.db.GroupRepository;
 import ansrs.set.WorkingSet;
 import ansrs.set.CompletedSet;
-import ansrs.db.DBManager;
+import ansrs.db.ItemRepository;
 import ansrs.util.Log;
 import ansrs.util.Printer;
 import picocli.CommandLine.*;
@@ -16,19 +17,22 @@ import java.util.concurrent.Callable;
         AnSRS version 1.3.0-SNAPSHOT
         """,
         mixinStandardHelpOptions = true,
-        subcommands = {AddCommand.class, CompleteCommand.class, DeleteCommand.class,
-                CommitCommand.class, RecallCommand.class, RollbackCommand.class, ImportCommand.class, ArchiveCommand.class})
+        subcommands = {AddCommand.class, CompleteCommand.class, DeleteCommand.class, CommitCommand.class,
+                RecallCommand.class, RollbackCommand.class, ImportCommand.class, ArchiveCommand.class,
+                GroupCommand.class})
 public class SRSCommand implements Callable<Integer> {
     public final WorkingSet workingSet;
     public final CompletedSet completedSet;
-    public final DBManager itemDB;
-    public final ArchiveManager archiveManager;
+    public final ItemRepository itemRepository;
+    public final ArchiveRepository archiveRepository;
+    public final GroupRepository groupRepository;
 
-    public SRSCommand(WorkingSet workingSet, CompletedSet completedSet, DBManager DBManager, ArchiveManager archiveManager) {
+    public SRSCommand(WorkingSet workingSet, CompletedSet completedSet, ItemRepository ItemRepository, ArchiveRepository archiveRepository, GroupRepository groupRepository) {
         this.workingSet = workingSet;
         this.completedSet = completedSet;
-        this.itemDB = DBManager;
-        this.archiveManager = archiveManager;
+        this.itemRepository = ItemRepository;
+        this.archiveRepository = archiveRepository;
+        this.groupRepository = groupRepository;
     }
 
     @Spec
@@ -51,17 +55,17 @@ public class SRSCommand implements Callable<Integer> {
         validate();
         if (itemId != -12341234) {
             System.out.println("Item:");
-            Printer.printItem(itemDB.getItemById(itemId).orElse(null));
+            Printer.printItem(itemRepository.getItemById(itemId).orElse(null));
         }
         if (!itemName.equals("zyxwvutsrqp")) {
             System.out.println("Search: " + itemName);
-            Printer.printItemsList(itemDB.searchItemsByName(itemName.trim()).orElse(new ArrayList<>()));
+            Printer.printItemsList(itemRepository.searchItemsByName(itemName.trim()).orElse(new ArrayList<>()));
         }
         if (list) {
             if (set) {
-                Printer.setStatePrinter(workingSet, completedSet, itemDB);
+                Printer.setStatePrinter(workingSet, completedSet, itemRepository);
             } else {
-                Printer.statePrinter(workingSet, completedSet, itemDB);
+                Printer.statePrinter(workingSet, completedSet, itemRepository);
             }
         }
         return 0;

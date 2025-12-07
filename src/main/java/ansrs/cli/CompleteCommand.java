@@ -59,7 +59,7 @@ public class CompleteCommand implements Callable<Integer> {
 
         if (!workingSetItemIds.contains(itemId)) {
             if (!force) throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID [" + itemId + "] doesn't exist in WorkingSet"));
-            Item item = parent.itemDB.getItemById(itemId).
+            Item item = parent.itemRepository.getItemById(itemId).
                     orElseThrow(
                             () -> new ParameterException(
                                     spec.commandLine(),
@@ -89,7 +89,7 @@ public class CompleteCommand implements Callable<Integer> {
             if (allComplete) {
                 throw new ParameterException(spec.commandLine(), Log.errorMsg("--all / -a flag can only be used when ITEM_ID is not specified"));
             }
-            if (!parent.itemDB.contains(itemId)) {
+            if (!parent.itemRepository.exists(itemId)) {
                 throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID [" + itemId + "] non-existent in database."));
             }
             if (poolString != null) {

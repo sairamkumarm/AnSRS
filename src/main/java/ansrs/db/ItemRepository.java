@@ -3,23 +3,20 @@ package ansrs.db;
 import ansrs.data.Item;
 import ansrs.util.Log;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ArchiveManager implements AutoCloseable{
+public class ItemRepository implements AutoCloseable {
     private final Connection connection;
 
-    public ArchiveManager(Connection connection){
-        this.connection = connection;
+    public ItemRepository(Connection connection) {
+        this.connection=connection;
     }
 
     public boolean insertItem(Item item) {
         try (PreparedStatement ps = connection.prepareStatement("""
-                    INSERT INTO archive
+                    INSERT INTO items
                     (id, name, link, pool, last_recall, total_recalls)
                     VALUES (?, ?, ?, ?, ?, ?)
                 """)) {
@@ -38,7 +35,7 @@ public class ArchiveManager implements AutoCloseable{
 
     public boolean insertItemsBatch(List<Item> items) {
         try (PreparedStatement statement = connection.prepareStatement("""
-                INSERT INTO archive
+                INSERT INTO items
                 (id, name, link, pool, last_recall, total_recalls)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """)) {
@@ -61,7 +58,7 @@ public class ArchiveManager implements AutoCloseable{
             } catch (SQLException ignore) {
             }
             if (Objects.equals(e.getSQLState(), "23505"))
-                throw new RuntimeException(Log.errorMsg("ERROR: Duplicate ITEM_ID found."));
+                throw new RuntimeException(Log.errorMsg("Duplicate ITEM_ID found."));
             return false;
         } finally {
             try {
@@ -73,7 +70,7 @@ public class ArchiveManager implements AutoCloseable{
 
     public boolean upsertItemsBatch(List<Item> items) {
         try (PreparedStatement statement = connection.prepareStatement("""
-                MERGE INTO archive
+                MERGE INTO items
                 (id, name, link, pool, last_recall, total_recalls)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """)) {
@@ -107,7 +104,7 @@ public class ArchiveManager implements AutoCloseable{
     public boolean updateItem(Item item) {
         try (PreparedStatement ps = connection.prepareStatement(
                 """
-                            MERGE INTO archive
+                            MERGE INTO items
                             (id, name, link, pool, last_recall, total_recalls)
                             VALUES (?, ?, ?, ?, ?, ?)
                         """
@@ -128,7 +125,7 @@ public class ArchiveManager implements AutoCloseable{
     public boolean updateItemsBatch(List<Item> items) {
         try (PreparedStatement ps = connection.prepareStatement(
                 """
-                        UPDATE archive
+                        UPDATE items
                         SET name=?, link=?, pool=?, last_recall=?, total_recalls=?
                         WHERE id=?
                         """)
@@ -163,7 +160,7 @@ public class ArchiveManager implements AutoCloseable{
 
     public Optional<Item> getItemById(int itemId) {
         try (
-                ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM archive WHERE id=" + itemId);
+                ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM items WHERE id=" + itemId);
         ) {
             if (rs.next()) {
                 return Optional.of(new Item(
@@ -182,7 +179,7 @@ public class ArchiveManager implements AutoCloseable{
 
     public Optional<List<Item>> getAllItems() {
         List<Item> items = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM archive");
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM items");
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Item p = new Item(
@@ -204,7 +201,7 @@ public class ArchiveManager implements AutoCloseable{
 
     public Optional<HashSet<Integer>> getAllItemsIds() {
         HashSet<Integer> items = new HashSet<>();
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT id FROM archive");
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT id FROM items");
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 items.add(rs.getInt(1));
@@ -220,7 +217,7 @@ public class ArchiveManager implements AutoCloseable{
         if (ids == null || ids.isEmpty()) return Optional.empty();
         String inClause = ids.stream().map(k -> String.valueOf(k)).collect(Collectors.joining(",", "(", ")"));
         List<Item> res = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM archive WHERE id IN " + inClause);
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM items WHERE id IN " + inClause);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Item p = new Item(
@@ -241,7 +238,7 @@ public class ArchiveManager implements AutoCloseable{
     }
 
     public boolean deleteItemsById(int itemId) {
-        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM archive WHERE id=?");) {
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM items WHERE id=?");) {
             statement.setInt(1, itemId);
             int rows = statement.executeUpdate();
             return rows == 1;
@@ -250,19 +247,21 @@ public class ArchiveManager implements AutoCloseable{
         }
     }
 
-    public boolean contains(int itemId) {
-        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) as count FROM archive WHERE id=?")) {
-            statement.setInt(1, itemId);
-            ResultSet rs = statement.executeQuery();
+    public boolean exists(int id) {
+        try (PreparedStatement ps = connection.prepareStatement("""
+                SELECT EXISTS(SELECT 1 FROM items WHERE id=?)
+        """)) {
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
             rs.next();
-            return rs.getInt(1) == 1;
+            return rs.getBoolean(1);
         } catch (SQLException e) {
             return false;
         }
     }
 
     public Optional<List<Item>> searchItemsByName(String query) {
-        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM archive WHERE LOWER(name) LIKE LOWER(?)")) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM items WHERE LOWER(name) LIKE LOWER(?)")) {
             List<Item> items = new ArrayList<>();
             statement.setString(1,"%"+query+"%");
             ResultSet rs = statement.executeQuery();
@@ -284,16 +283,14 @@ public class ArchiveManager implements AutoCloseable{
         }
     }
 
-    public boolean clearDatabase() {
-        try (PreparedStatement statement = connection.prepareStatement("TRUNCATE TABLE archive")) {
-            statement.execute();
+    public boolean clearItems() {
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("DELETE FROM items");
             return true;
         } catch (SQLException e) {
             return false;
         }
     }
-
-
 
     @Override
     public void close() throws Exception {

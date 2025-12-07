@@ -32,7 +32,7 @@ public class CommitCommand implements Callable<Integer> {
         if(completedSetItems.isEmpty()){
             throw new ParameterException(spec.commandLine(), Log.errorMsg("Nothing to commit"));
         }
-        List<Item> dbItems = parent.itemDB.getItemsFromList(
+        List<Item> dbItems = parent.itemRepository.getItemsFromList(
                 completedSetItems.keySet().stream().toList()).
                 orElseThrow(
                         ()->new ParameterException(spec.commandLine(), Log.errorMsg("WorkingSet items non-existent in DB"))
@@ -50,7 +50,7 @@ public class CommitCommand implements Callable<Integer> {
             item.setTotalRecalls(item.getTotalRecalls()+1);
             parent.completedSet.removeItem(item.getItemId());
         }
-        if (!parent.itemDB.updateItemsBatch(dbItems)){
+        if (!parent.itemRepository.updateItemsBatch(dbItems)){
             Log.error("Commit Failed, rolling back");
             //rollback from Set items, not db, to preserve the null pools, that signify no change
             for (Map.Entry<Integer, CompletedSet.Pair<Item.Pool, LocalDate>> item: completedSetItems.entrySet()) parent.completedSet.addItem(item.getKey(), item.getValue().getPool(), item.getValue().getLast_recall());

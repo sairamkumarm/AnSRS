@@ -1,8 +1,8 @@
 package ansrs.cli;
 
 import ansrs.data.Item;
-import ansrs.db.DBManager;
-import ansrs.db.ArchiveManager;
+import ansrs.db.ItemRepository;
+import ansrs.db.ArchiveRepository;
 import ansrs.util.Log;
 import ansrs.util.Printer;
 import picocli.CommandLine.*;
@@ -54,17 +54,17 @@ public class ArchiveCommand implements Callable<Integer> {
     public Integer call() {
         validateSingleOperation();
 
-        ArchiveManager archiveManager = parent.archiveManager;
-        DBManager db = parent.itemDB;
+        ArchiveRepository archiveRepository = parent.archiveRepository;
+        ItemRepository db = parent.itemRepository;
 
-        if (addId != null) return handleAdd(addId, db, archiveManager);
-        if (deleteId != null) return handleDelete(deleteId, archiveManager);
-        if (restoreId != null) return handleRestore(restoreId, db, archiveManager);
-        if (listAll) return handleList(archiveManager);
-        if (getId != null) return handleGet(getId, archiveManager);
-        if (nameQuery != null) return handleSearch(nameQuery, archiveManager);
-        if (archiveAll) return handleArchiveAll(db, archiveManager);
-        if (restoreAll) return handleRestoreAll(db, archiveManager);
+        if (addId != null) return handleAdd(addId, db, archiveRepository);
+        if (deleteId != null) return handleDelete(deleteId, archiveRepository);
+        if (restoreId != null) return handleRestore(restoreId, db, archiveRepository);
+        if (listAll) return handleList(archiveRepository);
+        if (getId != null) return handleGet(getId, archiveRepository);
+        if (nameQuery != null) return handleSearch(nameQuery, archiveRepository);
+        if (archiveAll) return handleArchiveAll(db, archiveRepository);
+        if (restoreAll) return handleRestoreAll(db, archiveRepository);
 
         throw new ParameterException(spec.commandLine(), Log.errorMsg("No valid operation specified"));
     }
@@ -85,8 +85,8 @@ public class ArchiveCommand implements Callable<Integer> {
             throw new ParameterException(spec.commandLine(), Log.errorMsg("Only one operation can be used at a time"));
     }
 
-    private int handleAdd(int itemId, DBManager db, ArchiveManager archiveManager) {
-        if (!db.contains(itemId))
+    private int handleAdd(int itemId, ItemRepository db, ArchiveRepository archiveRepository) {
+        if (!db.exists(itemId))
             throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID[" + itemId + "] does not exist in database"));
 
         if (parent.workingSet.getItemIdSet().contains(itemId) || parent.completedSet.getItems().containsKey(itemId))
@@ -98,13 +98,13 @@ public class ArchiveCommand implements Callable<Integer> {
             return 1;
         }
 
-        if (!archiveManager.insertItem(item)){
+        if (!archiveRepository.insertItem(item)){
             Log.error("Archiving ITEM_ID[" + itemId + "] failed, aborted");
             return 1;
         }
 
         if (!db.deleteItemsById(itemId)) {
-            archiveManager.deleteItemsById(itemId);
+            archiveRepository.deleteItemsById(itemId);
             Log.error("Rollback: Failed to remove ITEM_ID[" + itemId + "] from DB after archiving");
             return 1;
         }
@@ -113,13 +113,13 @@ public class ArchiveCommand implements Callable<Integer> {
         return 0;
     }
 
-    private int handleDelete(int itemId, ArchiveManager archiveManager) {
+    private int handleDelete(int itemId, ArchiveRepository archiveRepository) {
         if (!sure)
             throw new ParameterException(spec.commandLine(), Log.errorMsg("--sure flag required to confirm deletion"));
-        if (!archiveManager.contains(itemId))
+        if (!archiveRepository.contains(itemId))
             throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID[" + itemId + "] does not exist in archive"));
 
-        if (archiveManager.deleteItemsById(itemId))
+        if (archiveRepository.deleteItemsById(itemId))
             Log.info("Deleted ITEM_ID[" + itemId + "] from archive");
         else{
             Log.error("Failed to delete ITEM_ID[" + itemId + "] from archive");
@@ -128,13 +128,13 @@ public class ArchiveCommand implements Callable<Integer> {
         return 0;
     }
 
-    private int handleRestore(int itemId, DBManager db, ArchiveManager archiveManager) {
-        if (!archiveManager.contains(itemId))
+    private int handleRestore(int itemId, ItemRepository db, ArchiveRepository archiveRepository) {
+        if (!archiveRepository.contains(itemId))
             throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID[" + itemId + "] does not exist in archive"));
-        if (db.contains(itemId))
+        if (db.exists(itemId))
             throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID[" + itemId + "] already exists in DB"));
 
-        Item item = archiveManager.getItemById(itemId).orElse(null);
+        Item item = archiveRepository.getItemById(itemId).orElse(null);
         if (item==null){
             Log.error("Failed to fetch ITEM_ID[" + itemId + "] from archive");
             return 1;
@@ -145,7 +145,7 @@ public class ArchiveCommand implements Callable<Integer> {
             return 1;
         }
 
-        if (!archiveManager.deleteItemsById(itemId)) {
+        if (!archiveRepository.deleteItemsById(itemId)) {
             db.deleteItemsById(itemId);
             Log.error("Rollback: Failed to remove ITEM_ID[" + itemId + "] from archive after restore");
             return 1;
@@ -155,27 +155,27 @@ public class ArchiveCommand implements Callable<Integer> {
         return 0;
     }
 
-    private int handleList(ArchiveManager archiveManager) {
-        var list = archiveManager.getAllItems().orElse(Collections.emptyList());
+    private int handleList(ArchiveRepository archiveRepository) {
+        var list = archiveRepository.getAllItems().orElse(Collections.emptyList());
         Printer.printItemsList(list);
         return 0;
     }
 
-    private int handleGet(int itemId, ArchiveManager archiveManager) {
-        Item item = archiveManager.getItemById(itemId)
+    private int handleGet(int itemId, ArchiveRepository archiveRepository) {
+        Item item = archiveRepository.getItemById(itemId)
                 .orElse(null);
         Printer.printItem(item);
         return 0;
     }
 
-    private int handleSearch(String query, ArchiveManager archiveManager) {
+    private int handleSearch(String query, ArchiveRepository archiveRepository) {
         System.out.println("Search: "+query.trim());
-        var list = archiveManager.searchItemsByName(query.trim()).orElse(Collections.emptyList());
+        var list = archiveRepository.searchItemsByName(query.trim()).orElse(Collections.emptyList());
         Printer.printItemsList(list);
         return 0;
     }
 
-    private int handleArchiveAll(DBManager db, ArchiveManager archiveManager) {
+    private int handleArchiveAll(ItemRepository db, ArchiveRepository archiveRepository) {
         if (!sure)
             throw new ParameterException(spec.commandLine(), Log.errorMsg("--sure flag required to confirm mass archival"));
         var allItems = db.getAllItems().orElse(Collections.emptyList());
@@ -201,14 +201,14 @@ public class ArchiveCommand implements Callable<Integer> {
             return 1;
         }
 
-        if (!archiveManager.insertItemsBatch(toArchive)){
+        if (!archiveRepository.insertItemsBatch(toArchive)){
             Log.error("Failed to archive items");
             return 1;
         }
 
         for (Item item : toArchive) {
             if (!db.deleteItemsById(item.getItemId())) {
-                archiveManager.deleteItemsById(item.getItemId());
+                archiveRepository.deleteItemsById(item.getItemId());
                 Log.error("Rollback: failed to delete ITEM_ID[" + item.getItemId() + "] from DB");
             }
         }
@@ -217,11 +217,11 @@ public class ArchiveCommand implements Callable<Integer> {
         return 0;
     }
 
-    private int handleRestoreAll(DBManager db, ArchiveManager archiveManager) {
+    private int handleRestoreAll(ItemRepository db, ArchiveRepository archiveRepository) {
         if (!sure)
             throw new ParameterException(spec.commandLine(), Log.errorMsg("--sure flag required to confirm mass restore"));
 
-        var allItems = archiveManager.getAllItems().orElse(Collections.emptyList());
+        var allItems = archiveRepository.getAllItems().orElse(Collections.emptyList());
         if (allItems.isEmpty()) {
             Log.error("No items in archive to restore");
             return 1;
@@ -229,7 +229,7 @@ public class ArchiveCommand implements Callable<Integer> {
 
         int restoredCount = 0;
         for (Item item : allItems) {
-            if (db.contains(item.getItemId())) {
+            if (db.exists(item.getItemId())) {
                 Log.warn("Skipping ITEM_ID[" + item.getItemId() + "]: already exists in DB");
                 continue;
             }
@@ -237,7 +237,7 @@ public class ArchiveCommand implements Callable<Integer> {
                 Log.error("Failed to restore ITEM_ID[" + item.getItemId() + "] to DB");
                 continue;
             }
-            if (!archiveManager.deleteItemsById(item.getItemId())) {
+            if (!archiveRepository.deleteItemsById(item.getItemId())) {
                 db.deleteItemsById(item.getItemId());
                 Log.error("Rollback: failed to remove ITEM_ID[" + item.getItemId() + "] from archive after restore");
                 continue;

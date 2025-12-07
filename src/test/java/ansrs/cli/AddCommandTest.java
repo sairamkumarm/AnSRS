@@ -1,8 +1,9 @@
 package ansrs.cli;
 
 import ansrs.data.Item;
-import ansrs.db.ArchiveManager;
-import ansrs.db.DBManager;
+import ansrs.db.ArchiveRepository;
+import ansrs.db.GroupRepository;
+import ansrs.db.ItemRepository;
 import ansrs.set.CompletedSet;
 import ansrs.set.WorkingSet;
 import org.junit.jupiter.api.*;
@@ -22,8 +23,9 @@ class AddCommandTest {
     private Path tempDir;
     private WorkingSet workingSet;
     private CompletedSet completedSet;
-    private DBManager db;
-    private ArchiveManager am;
+    private ItemRepository db;
+    private ArchiveRepository am;
+    private GroupRepository gr;
     private AddCommand cmd;
     private SRSCommand parent;
     private CommandLine cmdLine;
@@ -37,9 +39,9 @@ class AddCommandTest {
 
         workingSet = spy(new WorkingSet(workingSetPath));
         completedSet = spy(new CompletedSet(completedSetPath));
-        db = mock(DBManager.class);
-        am= mock(ArchiveManager.class);
-        parent = new SRSCommand(workingSet, completedSet, db, am);
+        db = mock(ItemRepository.class);
+        am= mock(ArchiveRepository.class);
+        parent = new SRSCommand(workingSet, completedSet, db, am, gr);
         cmd = new AddCommand();
         cmdLine = new CommandLine(cmd);
         cmd.parent = parent;

@@ -1,8 +1,9 @@
 package ansrs.cli;
 
 import ansrs.data.Item;
-import ansrs.db.ArchiveManager;
-import ansrs.db.DBManager;
+import ansrs.db.ArchiveRepository;
+import ansrs.db.GroupRepository;
+import ansrs.db.ItemRepository;
 import ansrs.set.CompletedSet;
 import ansrs.set.WorkingSet;
 import org.junit.jupiter.api.*;
@@ -23,8 +24,9 @@ class CompleteCommandTest {
     private Path tempDir;
     private WorkingSet workingSet;
     private CompletedSet completedSet;
-    private DBManager db;
-    private ArchiveManager am;
+    private ItemRepository db;
+    private ArchiveRepository am;
+    private GroupRepository gr;
     private SRSCommand parent;
     private CompleteCommand cmd;
     private CommandLine cmdLine;
@@ -34,14 +36,14 @@ class CompleteCommandTest {
         tempDir = Files.createTempDirectory("ansrs-test");
         workingSet = new WorkingSet(tempDir.resolve("working.set"));
         completedSet = new CompletedSet(tempDir.resolve("completed.set"));
-        db = mock(DBManager.class);
-        am= mock(ArchiveManager.class);
-        parent = new SRSCommand(workingSet, completedSet, db, am);
+        db = mock(ItemRepository.class);
+        am= mock(ArchiveRepository.class);
+        parent = new SRSCommand(workingSet, completedSet, db, am, gr);
         cmd = new CompleteCommand();
         cmdLine = new CommandLine(cmd);
         cmd.parent = parent;
 
-        when(db.contains(anyInt())).thenReturn(true);
+        when(db.exists(anyInt())).thenReturn(true);
     }
 
     @AfterEach
@@ -92,7 +94,7 @@ class CompleteCommandTest {
 
     @Test
     void testForceCompletionWhenItemNotInWorkingSet() {
-        when(db.contains(5)).thenReturn(true);
+        when(db.exists(5)).thenReturn(true);
         Item mockItem = new Item(5, "Mock", "https://mock.com", Item.Pool.M, LocalDate.now(), 0);
         when(db.getItemById(5)).thenReturn(Optional.of(mockItem));
 
@@ -102,7 +104,7 @@ class CompleteCommandTest {
 
     @Test
     void testForceCompletionWithCustomDate() {
-        when(db.contains(6)).thenReturn(true);
+        when(db.exists(6)).thenReturn(true);
         Item mockItem = new Item(6, "Mock", "https://mock.com", Item.Pool.L, LocalDate.now(), 0);
         when(db.getItemById(6)).thenReturn(Optional.of(mockItem));
 
@@ -132,7 +134,7 @@ class CompleteCommandTest {
 
     @Test
     void testNonExistentDatabaseItem() {
-        when(db.contains(anyInt())).thenReturn(false);
+        when(db.exists(anyInt())).thenReturn(false);
         assertEquals(2, cmdLine.execute("12"));
     }
 
@@ -150,7 +152,7 @@ class CompleteCommandTest {
 
     @Test
     void testForceFlagButItemNotInDatabase() {
-        when(db.contains(15)).thenReturn(true);
+        when(db.exists(15)).thenReturn(true);
         when(db.getItemById(15)).thenReturn(Optional.empty());
         assertEquals(2, cmdLine.execute("15", "--force"));
     }
@@ -178,7 +180,7 @@ class CompleteCommandTest {
         };
 
         CompletedSet completedSpy = spy(completedSet);
-        SRSCommand customParent = new SRSCommand(badWorkingSet, completedSpy, db, am);
+        SRSCommand customParent = new SRSCommand(badWorkingSet, completedSpy, db, am, gr);
         CompleteCommand customCmd = new CompleteCommand();
         CommandLine cl = new CommandLine(customCmd);
         customCmd.parent = customParent;

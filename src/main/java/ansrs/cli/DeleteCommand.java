@@ -42,7 +42,7 @@ public class DeleteCommand implements Callable<Integer> {
         validate();
         if (reset) {
             if (
-                    parent.itemDB.clearDatabase() &&
+                    parent.itemRepository.clearItems() &&
                             parent.completedSet.clearSet() &&
                             parent.workingSet.clearSet()
             ){
@@ -81,7 +81,7 @@ public class DeleteCommand implements Callable<Integer> {
 
 
         if (deleteFromDatabase) {
-            if (!parent.itemDB.deleteItemsById(itemId)) {
+            if (!parent.itemRepository.deleteItemsById(itemId)) {
                 Log.error("Error in deleting ITEM_ID [" + itemId + "] from DB, use --list to confirm its existence");
                 return 1;
             }

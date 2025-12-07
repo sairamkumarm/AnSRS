@@ -8,15 +8,15 @@ import java.time.LocalDate;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-class ArchiveManagerTest {
+class ArchiveRepositoryTest {
 
-    static ArchiveManager am;
+    static ArchiveRepository am;
     static Item baseItem;
 
     @BeforeAll
     static void setup() {
         Connection connection = DatabaseInitialiser.initInMemoryDb("testdb");
-        am = new ArchiveManager(connection);
+        am = new ArchiveRepository(connection);
         baseItem = new Item(1, "Item1", "https://a.com", Item.Pool.H, LocalDate.now(), 2);
     }
 

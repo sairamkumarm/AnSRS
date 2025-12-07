@@ -1,7 +1,7 @@
 package ansrs.service;
 
 import ansrs.data.Item;
-import ansrs.db.DBManager;
+import ansrs.db.ItemRepository;
 import ansrs.util.Log;
 
 import java.time.LocalDate;
@@ -23,20 +23,20 @@ public class RecallService {
     private Double beta = 1.2;
     private Double gamma = 1.0;
     private LocalDate date = LocalDate.now();
-    public RecallService(DBManager dbManager){
-        loadQueue(dbManager);
+    public RecallService(ItemRepository itemRepository){
+        loadQueue(itemRepository);
     }
 
-    public RecallService(DBManager dbManager, Double alpha, Double beta, Double gamma, LocalDate date){
+    public RecallService(ItemRepository itemRepository, Double alpha, Double beta, Double gamma, LocalDate date){
         this.alpha = alpha;
         this.beta= beta;
         this.gamma = gamma;
         this.date = date;
-        loadQueue(dbManager);
+        loadQueue(itemRepository);
     }
 
-    private void loadQueue(DBManager dbManager){
-        Optional<List<Item>> list = dbManager.getAllItems();
+    private void loadQueue(ItemRepository itemRepository){
+        Optional<List<Item>> list = itemRepository.getAllItems();
         if (list.isEmpty()) throw new RuntimeException(Log.errorMsg("Invalid recall attempt"));
         for (Item p: list.get()) itemQueue.add(p);
     }

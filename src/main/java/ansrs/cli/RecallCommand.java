@@ -1,7 +1,7 @@
 package ansrs.cli;
 
 import ansrs.data.Item;
-import ansrs.db.DBManager;
+import ansrs.db.ItemRepository;
 import ansrs.util.Log;
 import ansrs.util.Printer;
 import ansrs.service.RecallService;
@@ -54,19 +54,19 @@ public class RecallCommand implements Callable<Integer> {
             }
         }
         if (validCustomRecallIds.isEmpty()){
-            RecallService recallService = createRecallService(parent.itemDB);
+            RecallService recallService = createRecallService(parent.itemRepository);
             workingSetItems.addAll(recallService.recall(recallCount));
         } else {
             workingSetItems.addAll(validCustomRecallIds);
         }
         parent.workingSet.fillSet(workingSetItems);
         Log.info(workingSetItems.size() + " items in WorkingSet");
-        List<Item> list = parent.itemDB.getItemsFromList(workingSetItems.stream().toList()).orElse(new ArrayList<>());
+        List<Item> list = parent.itemRepository.getItemsFromList(workingSetItems.stream().toList()).orElse(new ArrayList<>());
         Printer.printItemsList(list);
         return 0;
     }
 
-    protected RecallService createRecallService(DBManager db) {
+    protected RecallService createRecallService(ItemRepository db) {
         return new RecallService(db);
     }
 
@@ -78,7 +78,7 @@ public class RecallCommand implements Callable<Integer> {
             if (customRecallIds.size()==1){
                 for (int id: customRecallIds){
                     if (id<=0) throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID cannot be non-positive"));
-                    else if (!parent.itemDB.contains(id)){
+                    else if (!parent.itemRepository.exists(id)){
                         throw new ParameterException(spec.commandLine(), Log.errorMsg("ITEM_ID["+id+"] is non-existent in database"));
                     }
                      else {
@@ -88,7 +88,7 @@ public class RecallCommand implements Callable<Integer> {
             } else {
                 for (int id : customRecallIds) {
                     if (id<=0) Log.warn("ITEM_ID cannot be non-positive, ignoring");
-                    else if (!parent.itemDB.contains(id)) {
+                    else if (!parent.itemRepository.exists(id)) {
                         Log.warn("ITEM_ID[" + id + "] non existent in database, ignoring");
                     } else {
                         validCustomRecallIds.add(id);

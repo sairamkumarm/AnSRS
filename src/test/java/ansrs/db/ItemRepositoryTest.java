@@ -8,21 +8,21 @@ import java.time.LocalDate;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-class DBManagerTest {
+class ItemRepositoryTest {
 
-    static DBManager db;
+    static ItemRepository db;
     static Item baseItem;
 
     @BeforeAll
     static void setup() {
         Connection conn = DatabaseInitialiser.initInMemoryDb("testdb");
-        db = new DBManager(conn);
+        db = new ItemRepository(conn);
         baseItem = new Item(1, "Item1", "https://a.com", Item.Pool.H, LocalDate.now(), 2);
     }
 
     @AfterEach
     void clear() {
-        db.clearDatabase();
+        db.clearItems();
     }
 
     @AfterAll
@@ -78,11 +78,11 @@ class DBManagerTest {
     }
 
     @Test
-    void testDeleteAndContains() {
+    void testDeleteAndExists() {
         db.insertItem(baseItem);
-        assertTrue(db.contains(1));
+        assertTrue(db.exists(1));
         assertTrue(db.deleteItemsById(1));
-        assertFalse(db.contains(1));
+        assertFalse(db.exists(1));
     }
 
     @Test
@@ -129,9 +129,9 @@ class DBManagerTest {
 
 
     @Test
-    void testClearDatabase() {
+    void testClearItems() {
         db.insertItem(baseItem);
-        assertTrue(db.clearDatabase());
-        assertEquals(0, db.getAllItems().get().size());
+        assertTrue(db.clearItems());
+        assertEquals(0, (db.getAllItems().orElse(new ArrayList<>())).size());
     }
 }

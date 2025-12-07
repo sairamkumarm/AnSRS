@@ -20,12 +20,13 @@
 // misrepresentation, and required attribution.
 package ansrs;
 
-import ansrs.db.ArchiveManager;
+import ansrs.db.ArchiveRepository;
 import ansrs.db.DatabaseInitialiser;
+import ansrs.db.GroupRepository;
 import ansrs.set.WorkingSet;
 import ansrs.set.CompletedSet;
 import ansrs.cli.SRSCommand;
-import ansrs.db.DBManager;
+import ansrs.db.ItemRepository;
 import ansrs.util.Banner;
 import ansrs.util.Log;
 import ansrs.util.Printer;
@@ -59,21 +60,22 @@ public class ansrs {
             WorkingSet workingSet = new WorkingSet(workingSetPath);
             CompletedSet completedSet = new CompletedSet(completedSetPath);
             Connection conn = DatabaseInitialiser.initEmbeddedDb(databasePath);
-            DBManager db = new DBManager(conn);
-            ArchiveManager archiveManager = new ArchiveManager(conn);
+            ItemRepository itemRepository = new ItemRepository(conn);
+            ArchiveRepository archiveRepository = new ArchiveRepository(conn);
+            GroupRepository groupRepository = new GroupRepository(conn);
             if (args.length == 0) {
                 Banner.colorrizedBanner("1.3.0-SNAPSHOT");
                 if (workingSet.getItemIdSet().isEmpty()) {
                     Banner.initHelp();
                 } else {
                     System.out.println("Current WorkingSet:");
-                    Printer.printItemsList(db.getItemsFromList(workingSet.getItemIdList()).orElse(new ArrayList<>()));
+                    Printer.printItemsList(itemRepository.getItemsFromList(workingSet.getItemIdList()).orElse(new ArrayList<>()));
                 }
             }
-            SRSCommand root = new SRSCommand(workingSet, completedSet, db, archiveManager);
+            SRSCommand root = new SRSCommand(workingSet, completedSet, itemRepository, archiveRepository, groupRepository);
             int exitCode = new CommandLine(root).execute(args);
-            db.close();
-            archiveManager.close();
+            itemRepository.close();
+            archiveRepository.close();
             System.exit(exitCode);
         } catch (IOException e) {
             throw new RuntimeException(Log.errorMsg("Error initializing environment"), e);

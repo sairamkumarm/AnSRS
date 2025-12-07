@@ -1,7 +1,8 @@
 package ansrs.cli;
 
-import ansrs.db.ArchiveManager;
-import ansrs.db.DBManager;
+import ansrs.db.ArchiveRepository;
+import ansrs.db.GroupRepository;
+import ansrs.db.ItemRepository;
 import ansrs.set.CompletedSet;
 import ansrs.set.WorkingSet;
 import org.junit.jupiter.api.*;
@@ -19,8 +20,9 @@ class DeleteCommandTest {
     private Path tempDir;
     private WorkingSet workingSet;
     private CompletedSet completedSet;
-    private DBManager db;
-    private ArchiveManager am;
+    private ItemRepository db;
+    private ArchiveRepository am;
+    private GroupRepository gr;
     private SRSCommand parent;
     private DeleteCommand cmd;
     private CommandLine cmdLine;
@@ -30,9 +32,9 @@ class DeleteCommandTest {
         tempDir = Files.createTempDirectory("ansrs-test");
         workingSet = spy(new WorkingSet(tempDir.resolve("working.set")));
         completedSet = spy(new CompletedSet(tempDir.resolve("completed.set")));
-        db = mock(DBManager.class);
-        am= mock(ArchiveManager.class);
-        parent = new SRSCommand(workingSet, completedSet, db, am);
+        db = mock(ItemRepository.class);
+        am= mock(ArchiveRepository.class);
+        parent = new SRSCommand(workingSet, completedSet, db, am, gr);
         cmd = new DeleteCommand();
         cmdLine = new CommandLine(cmd);
         cmd.parent = parent;
@@ -79,19 +81,19 @@ class DeleteCommandTest {
 
     @Test
     void testHardResetSuccess() {
-        when(db.clearDatabase()).thenReturn(true);
+        when(db.clearItems()).thenReturn(true);
         doReturn(true).when(completedSet).clearSet();
         doReturn(true).when(workingSet).clearSet();
 
         assertEquals(0, cmdLine.execute("--sure", "--hard-reset"));
-        verify(db).clearDatabase();
+        verify(db).clearItems();
         verify(workingSet).clearSet();
         verify(completedSet).clearSet();
     }
 
     @Test
     void testHardResetFailure() {
-        when(db.clearDatabase()).thenReturn(false);
+        when(db.clearItems()).thenReturn(false);
         assertEquals(1, cmdLine.execute("--sure", "--hard-reset"));
     }
 
@@ -256,7 +258,7 @@ class DeleteCommandTest {
 
     @Test
     void testResetPartialClearFailsReturnsOne() {
-        when(db.clearDatabase()).thenReturn(true);
+        when(db.clearItems()).thenReturn(true);
         doReturn(true).when(workingSet).clearSet();
         doReturn(false).when(completedSet).clearSet();
         assertEquals(1, cmdLine.execute("--sure", "--hard-reset"));

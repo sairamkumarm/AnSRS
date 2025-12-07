@@ -1,8 +1,9 @@
 package ansrs.cli;
 
 import ansrs.data.Item;
-import ansrs.db.ArchiveManager;
-import ansrs.db.DBManager;
+import ansrs.db.ArchiveRepository;
+import ansrs.db.GroupRepository;
+import ansrs.db.ItemRepository;
 import ansrs.set.CompletedSet;
 import ansrs.set.WorkingSet;
 import org.junit.jupiter.api.*;
@@ -10,8 +11,6 @@ import picocli.CommandLine;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,8 +21,9 @@ class RollbackCommandTest {
     private Path tempDir;
     private WorkingSet workingSet;
     private CompletedSet completedSet;
-    private DBManager db;
-    private ArchiveManager am;
+    private ItemRepository db;
+    private ArchiveRepository am;
+    private GroupRepository gr;
     private SRSCommand parent;
     private RollbackCommand cmd;
     private CommandLine cmdLine;
@@ -33,9 +33,9 @@ class RollbackCommandTest {
         tempDir = Files.createTempDirectory("ansrs-test");
         workingSet = spy(new WorkingSet(tempDir.resolve("working.set")));
         completedSet = spy(new CompletedSet(tempDir.resolve("completed.set")));
-        db = mock(DBManager.class);
-        am= mock(ArchiveManager.class);
-        parent = new SRSCommand(workingSet, completedSet, db, am);
+        db = mock(ItemRepository.class);
+        am= mock(ArchiveRepository.class);
+        parent = new SRSCommand(workingSet, completedSet, db, am, gr);
         cmd = new RollbackCommand();
         cmdLine = new CommandLine(cmd);
         cmd.parent = parent;
@@ -127,7 +127,7 @@ class RollbackCommandTest {
         };
 
         WorkingSet spyWorking = workingSet;
-        SRSCommand customParent = new SRSCommand(spyWorking, badCompleted, db, am);
+        SRSCommand customParent = new SRSCommand(spyWorking, badCompleted, db, am, gr);
         RollbackCommand customCmd = new RollbackCommand();
         CommandLine cl = new CommandLine(customCmd);
         customCmd.parent = customParent;

@@ -1,8 +1,9 @@
 package ansrs.cli;
 
 import ansrs.data.Item;
-import ansrs.db.ArchiveManager;
-import ansrs.db.DBManager;
+import ansrs.db.ArchiveRepository;
+import ansrs.db.GroupRepository;
+import ansrs.db.ItemRepository;
 import ansrs.set.CompletedSet;
 import ansrs.set.WorkingSet;
 import org.junit.jupiter.api.*;
@@ -21,8 +22,9 @@ class ArchiveCommandTest {
     private Path tempDir;
     private WorkingSet workingSet;
     private CompletedSet completedSet;
-    private DBManager db;
-    private ArchiveManager am;
+    private ItemRepository db;
+    private GroupRepository gr;
+    private ArchiveRepository am;
     private SRSCommand parent;
     private ArchiveCommand cmd;
     private CommandLine cmdLine;
@@ -32,9 +34,9 @@ class ArchiveCommandTest {
         tempDir = Files.createTempDirectory("ansrs-archive-test");
         workingSet = spy(new WorkingSet(tempDir.resolve("working.set")));
         completedSet = spy(new CompletedSet(tempDir.resolve("completed.set")));
-        db = mock(DBManager.class);
-        am = mock(ArchiveManager.class);
-        parent = new SRSCommand(workingSet, completedSet, db, am);
+        db = mock(ItemRepository.class);
+        am = mock(ArchiveRepository.class);
+        parent = new SRSCommand(workingSet, completedSet, db, am, gr);
         cmd = new ArchiveCommand();
         cmd.parent = parent;
         cmdLine = new CommandLine(cmd);
@@ -54,7 +56,7 @@ class ArchiveCommandTest {
 
     @Test
     void testAddSuccess() {
-        when(db.contains(1)).thenReturn(true);
+        when(db.exists(1)).thenReturn(true);
         when(db.getItemById(1)).thenReturn(Optional.of(new Item(1, "Old", "https://old.com", Item.Pool.H, LocalDate.now(), 1)));
         when(am.insertItem(any())).thenReturn(true);
         when(db.deleteItemsById(1)).thenReturn(true);
@@ -77,7 +79,7 @@ class ArchiveCommandTest {
     void testRestoreSuccess() {
         Item item = new Item(20, "Old", "https://old.com", Item.Pool.H, LocalDate.now(), 1);
         when(am.contains(20)).thenReturn(true);
-        when(db.contains(20)).thenReturn(false);
+        when(db.exists(20)).thenReturn(false);
         when(am.getItemById(20)).thenReturn(Optional.of(item));
         when(db.insertItem(item)).thenReturn(true);
         when(am.deleteItemsById(20)).thenReturn(true);
@@ -131,20 +133,20 @@ class ArchiveCommandTest {
 
     @Test
     void testAddFailsWhenNotInDb() {
-        when(db.contains(99)).thenReturn(false);
+        when(db.exists(99)).thenReturn(false);
         assertEquals(2, cmdLine.execute("--add", "99"));
     }
 
     @Test
     void testAddFailsWhenItemInSet() {
         workingSet.addItem(5);
-        when(db.contains(5)).thenReturn(true);
+        when(db.exists(5)).thenReturn(true);
         assertEquals(2, cmdLine.execute("--add", "5"));
     }
 
     @Test
     void testAddFailsOnInsertError() {
-        when(db.contains(10)).thenReturn(true);
+        when(db.exists(10)).thenReturn(true);
         when(db.getItemById(10)).thenReturn(Optional.of(new Item(10, "Old", "https://old.com", Item.Pool.H, LocalDate.now(), 1)));
         when(am.insertItem(any())).thenReturn(false);
         assertEquals(1, cmdLine.execute("--add", "10"));
@@ -178,14 +180,14 @@ class ArchiveCommandTest {
     @Test
     void testRestoreFailsIfAlreadyInDb() {
         when(am.contains(22)).thenReturn(true);
-        when(db.contains(22)).thenReturn(true);
+        when(db.exists(22)).thenReturn(true);
         assertEquals(2, cmdLine.execute("--restore", "22"));
     }
 
     @Test
     void testRestoreFailsIfFetchFails() {
         when(am.contains(23)).thenReturn(true);
-        when(db.contains(23)).thenReturn(false);
+        when(db.exists(23)).thenReturn(false);
         when(am.getItemById(23)).thenReturn(Optional.empty());
         assertEquals(1, cmdLine.execute("--restore", "23"));
     }
@@ -245,7 +247,7 @@ class ArchiveCommandTest {
                 new Item(101, "Old", "https://old.com", Item.Pool.H, LocalDate.now(), 1)
         );
         when(am.getAllItems()).thenReturn(Optional.of(items));
-        when(db.contains(anyInt())).thenReturn(false);
+        when(db.exists(anyInt())).thenReturn(false);
         when(db.insertItem(any())).thenReturn(true);
         when(am.deleteItemsById(anyInt())).thenReturn(true);
 
@@ -264,8 +266,8 @@ class ArchiveCommandTest {
         Item a = new Item(200, "Old", "https://old.com", Item.Pool.H, LocalDate.now(), 1);
         Item b = new Item(201, "Old", "https://old.com", Item.Pool.H, LocalDate.now(), 1);
         when(am.getAllItems()).thenReturn(Optional.of(List.of(a, b)));
-        when(db.contains(200)).thenReturn(true);
-        when(db.contains(201)).thenReturn(false);
+        when(db.exists(200)).thenReturn(true);
+        when(db.exists(201)).thenReturn(false);
         when(db.insertItem(b)).thenReturn(true);
         when(am.deleteItemsById(201)).thenReturn(true);
 
@@ -285,7 +287,7 @@ class ArchiveCommandTest {
         Item a = new Item(300, "Old", "https://old.com", Item.Pool.H, LocalDate.now(), 1);
         Item b = new Item(301, "Old", "https://old.com", Item.Pool.H, LocalDate.now(), 1);
         when(am.getAllItems()).thenReturn(Optional.of(List.of(a, b)));
-        when(db.contains(anyInt())).thenReturn(false);
+        when(db.exists(anyInt())).thenReturn(false);
         when(db.insertItem(a)).thenReturn(false); // fail first insert
         when(db.insertItem(b)).thenReturn(true);
         when(am.deleteItemsById(b.getItemId())).thenReturn(true);

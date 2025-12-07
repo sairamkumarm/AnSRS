@@ -1,12 +1,18 @@
 package ansrs.util;
 
+import ansrs.data.Group;
 import ansrs.data.Item;
 import ansrs.set.CompletedSet;
 import ansrs.set.WorkingSet;
-import ansrs.db.DBManager;
+import ansrs.db.ItemRepository;
 
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,14 +20,14 @@ public class Printer {
     public static final String bold = "\u001B[1m";
     public static final String dim = "\u001B[2m";
     public static final String reset = "\u001B[22m";
-    public static void statePrinter(WorkingSet workingSet, CompletedSet completedSet, DBManager DBManager) {
+    public static void statePrinter(WorkingSet workingSet, CompletedSet completedSet, ItemRepository ItemRepository) {
         System.out.println("+------------SYSTEM STATUS-------------+");
 
         System.out.println("WorkingSet: "+ workingSet.getItemIdSet());
 
         System.out.println("CompletedSet: "+ completedSet.getItems());
 
-        Optional<List<Item>> itemsList = DBManager.getAllItems();
+        Optional<List<Item>> itemsList = ItemRepository.getAllItems();
         System.out.println("Database:");
         if (itemsList.isPresent()) {
             printItemsList(itemsList.get());
@@ -32,7 +38,7 @@ public class Printer {
         }
 
     }
-    public static void setStatePrinter(WorkingSet workingSet, CompletedSet completedSet, DBManager db) {
+    public static void setStatePrinter(WorkingSet workingSet, CompletedSet completedSet, ItemRepository db) {
         System.out.println("+------------SYSTEM STATUS-------------+");
         System.out.println("WorkingSet: ");
         List<Item> workingSetItems = db.getItemsFromList(workingSet.getItemIdList()).orElse(new ArrayList<>());
@@ -97,5 +103,51 @@ public class Printer {
 
     }
 
+    public static void printGroupRow(Group group) {
 
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
+        String createdAt = group.createdAt.atZone(ZoneId.systemDefault()).toLocalDate().format(formatter);
+        String updatedAt = group.updatedAt.atZone(ZoneId.systemDefault()).toLocalDate().format(formatter);
+        // Top separator
+        System.out.println(dim+"-------------------------------------------------------------"+reset);
+
+        // Line 1: Metadata (fixed, annotated)
+        System.out.printf(dim+"ID: "+reset+"%3s"+reset+dim+"   CREATED: "+reset+"%s"+reset+dim+"  LAST_UPDATED: "+reset+"%s"+"%n",
+                group.id, createdAt, updatedAt);
+
+        // Line 2: Name
+        System.out.println(dim+"NAME: "+reset+bold + group.name + reset);
+
+        // Line 3: Link
+        if(group.link!=null && !group.link.isBlank()) System.out.println(group.link);
+
+    }
+
+    public static void printGroup(Group group) {
+        if (group == null) {
+            System.out.println(dim+"+------------------------+");
+            System.out.println("|   "+reset+"Group Non-existent"+dim+"   |");
+            System.out.println("+------------------------+"+reset);
+            return;
+        }
+        printGroupRow(group);
+        System.out.println(dim+"-------------------------------------------------------------"+reset);
+    }
+
+    public static void printGroupsList(List<Group> groups) {
+        if (groups == null || groups.isEmpty()) {
+            System.out.println(dim+"+------------------------+");
+            System.out.println("|  "+reset+"No Groups to display"+dim+"  |");
+            System.out.println("+------------------------+"+reset);
+            return;
+        }
+
+        for (Group group: groups) {
+            printGroupRow(group);
+        }
+        System.out.println(dim + "-------------------------------------------------------------"+reset);
+        System.out.println(dim+"Total: "+reset+bold+groups.size()+reset+dim+" group(s)"+reset);
+        System.out.println(dim + "-------------------------------------------------------------"+reset);
+
+    }
 }

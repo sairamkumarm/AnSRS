@@ -1,8 +1,9 @@
 package ansrs.cli;
 
 import ansrs.data.Item;
-import ansrs.db.ArchiveManager;
-import ansrs.db.DBManager;
+import ansrs.db.ArchiveRepository;
+import ansrs.db.GroupRepository;
+import ansrs.db.ItemRepository;
 import ansrs.service.RecallService;
 import ansrs.set.CompletedSet;
 import ansrs.set.WorkingSet;
@@ -22,8 +23,9 @@ class RecallCommandTest {
     private Path tempDir;
     private WorkingSet workingSet;
     private CompletedSet completedSet;
-    private DBManager db;
-    private ArchiveManager am;
+    private ItemRepository db;
+    private GroupRepository gr;
+    private ArchiveRepository am;
     private SRSCommand parent;
     private RecallCommand cmd;
     private CommandLine cmdLine;
@@ -33,9 +35,9 @@ class RecallCommandTest {
         tempDir = Files.createTempDirectory("ansrs-test");
         workingSet = spy(new WorkingSet(tempDir.resolve("working.set")));
         completedSet = spy(new CompletedSet(tempDir.resolve("completed.set")));
-        db = mock(DBManager.class);
-        am= mock(ArchiveManager.class);
-        parent = new SRSCommand(workingSet, completedSet, db, am);
+        db = mock(ItemRepository.class);
+        am= mock(ArchiveRepository.class);
+        parent = new SRSCommand(workingSet, completedSet, db, am, gr);
         cmd = spy(new RecallCommand());
         cmdLine = new CommandLine(cmd);
         cmd.parent = parent;
@@ -102,8 +104,8 @@ class RecallCommandTest {
     @Test
     void testCustomRecallOnNonEmptyWorkingSetWithoutFlags() {
         workingSet.fillSet(Set.of(10,20));
-        when(db.contains(3)).thenReturn(true);
-        when(db.contains(4)).thenReturn(true);
+        when(db.exists(3)).thenReturn(true);
+        when(db.exists(4)).thenReturn(true);
         assertEquals(2, cmdLine.execute("--custom","3","4"));
     }
         @Test
@@ -152,7 +154,7 @@ class RecallCommandTest {
 
     @Test
     void testSingleValidCustomId() {
-        when(db.contains(5)).thenReturn(true);
+        when(db.exists(5)).thenReturn(true);
         when(db.getItemsFromList(any())).thenReturn(Optional.of(List.of(new Item())));
         assertEquals(0, cmdLine.execute("--custom", "5"));
         assertTrue(workingSet.getItemIdSet().contains(5));
@@ -160,7 +162,7 @@ class RecallCommandTest {
 
     @Test
     void testSingleInvalidCustomId() {
-        when(db.contains(99)).thenReturn(false);
+        when(db.exists(99)).thenReturn(false);
         assertEquals(2, cmdLine.execute("--custom", "99"));
     }
 
@@ -171,9 +173,9 @@ class RecallCommandTest {
 
     @Test
     void testMultipleCustomIdsMixedValidity() {
-        when(db.contains(2)).thenReturn(true);
-        when(db.contains(3)).thenReturn(false);
-        when(db.contains(4)).thenReturn(true);
+        when(db.exists(2)).thenReturn(true);
+        when(db.exists(3)).thenReturn(false);
+        when(db.exists(4)).thenReturn(true);
 //        when(db.getItemsFromList(any())).thenReturn(Optional.of(List.of(new Item())));
         assertEquals(0, cmdLine.execute("--custom", "2,3,-5,4"));
         assertTrue(workingSet.getItemIdSet().containsAll(Set.of(2, 4)));
@@ -181,7 +183,7 @@ class RecallCommandTest {
 
     @Test
     void testMultipleCustomIdsAllInvalid() {
-        when(db.contains(anyInt())).thenReturn(false);
+        when(db.exists(anyInt())).thenReturn(false);
         assertEquals(2, cmdLine.execute("--custom", "100,200"));
     }
 

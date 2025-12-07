@@ -1,7 +1,7 @@
 package ansrs.service;
 
 import ansrs.data.Item;
-import ansrs.db.DBManager;
+import ansrs.db.ItemRepository;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -15,14 +15,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RecallServiceTest {
 
-    private DBManager dbMock;
+    private ItemRepository dbMock;
     private List<Item> items;
     private RecallService service;
     private final LocalDate today = LocalDate.of(2025, 1, 1);
 
     @BeforeAll
     void setup() {
-        dbMock = Mockito.mock(DBManager.class);
+        dbMock = Mockito.mock(ItemRepository.class);
         items = new ArrayList<>();
 
         // Item(id, name, link, pool, lastRecall, totalRecalls)

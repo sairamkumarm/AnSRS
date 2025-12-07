@@ -48,12 +48,12 @@ public class ImportCommand implements Callable<Integer> {
             List<Item> items = csv.parse();
             if (items.isEmpty())
                 throw new ParameterException(spec.commandLine(), Log.errorMsg("Import Failed: No Valid Rows"));
-            Set<Integer> dbItemsSet = parent.itemDB.getAllItemsIds().orElse(new HashSet<>());
+            Set<Integer> dbItemsSet = parent.itemRepository.getAllItemsIds().orElse(new HashSet<>());
             boolean success = false;
             if (overwrite.equalsIgnoreCase("db")) {
                 List<Item> duplicates = items.stream().filter(k -> dbItemsSet.contains(k.getItemId())).toList();
                 List<Item> uniques = items.stream().filter(k -> !dbItemsSet.contains(k.getItemId())).toList();
-                if (!uniques.isEmpty()) success = parent.itemDB.insertItemsBatch(uniques);
+                if (!uniques.isEmpty()) success = parent.itemRepository.insertItemsBatch(uniques);
                 if (!duplicates.isEmpty()) Log.warn(duplicates.size() + " duplicate item(s)");
                 for (Item i : duplicates) Log.warn("Duplicate " + i.toString());
                 if (success) {
@@ -62,7 +62,7 @@ public class ImportCommand implements Callable<Integer> {
                 } else if (uniques.isEmpty()) Log.error("No Items to add to db");
                 else Log.error("Import failed");
             } else {
-                success = parent.itemDB.upsertItemsBatch(items);
+                success = parent.itemRepository.upsertItemsBatch(items);
                 if (success) {
                     Log.info("Import success: Merged " + items.size() + " Valid Rows to database");
                     return 0;

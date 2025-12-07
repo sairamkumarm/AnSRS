@@ -98,6 +98,23 @@
       ]
     },
     {
+      "type": "ansrs.cli.GroupCommand",
+      "fields": [
+        {
+          "name": "parent"
+        },
+        {
+          "name": "spec"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "ansrs.cli.ImportCommand",
       "fields": [
         {
@@ -667,7 +684,7 @@
       "glob": "db/migration/V1__bootstrap.sql"
     },
     {
-      "glob": "db/migration/V2__initList.sql"
+      "glob": "db/migration/V2__initGroups.sql"
     },
     {
       "glob": "org/flywaydb/core/internal/version.txt"
