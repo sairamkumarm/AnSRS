@@ -1,13 +1,14 @@
 package ansrs.cli;
 
 import ansrs.util.Log;
+import ansrs.util.VersionProvider;
 import picocli.CommandLine.*;
 
 import java.util.concurrent.Callable;
 
 @Command(name = "delete",
-        description = "Remove from WorkingSet, CompletedSet and db, depending on the flags, by default it removes from WorkingSet",
-        mixinStandardHelpOptions = true)
+        header = "Remove from WorkingSet, CompletedSet or Database",
+        mixinStandardHelpOptions = true, versionProvider = VersionProvider.class)
 public class DeleteCommand implements Callable<Integer> {
 
     @ParentCommand

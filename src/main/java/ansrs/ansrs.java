@@ -27,16 +27,13 @@ import ansrs.set.WorkingSet;
 import ansrs.set.CompletedSet;
 import ansrs.cli.SRSCommand;
 import ansrs.db.ItemRepository;
-import ansrs.util.Banner;
 import ansrs.util.Log;
-import ansrs.util.Printer;
 import picocli.CommandLine;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.util.ArrayList;
 
 public class ansrs {
 
@@ -63,15 +60,7 @@ public class ansrs {
             ItemRepository itemRepository = new ItemRepository(conn);
             ArchiveRepository archiveRepository = new ArchiveRepository(conn);
             GroupRepository groupRepository = new GroupRepository(conn);
-            if (args.length == 0) {
-                Banner.colorrizedBanner("1.3.0-SNAPSHOT");
-                if (workingSet.getItemIdSet().isEmpty()) {
-                    Banner.initHelp();
-                } else {
-                    System.out.println("Current WorkingSet:");
-                    Printer.printItemsList(itemRepository.getItemsFromList(workingSet.getItemIdList()).orElse(new ArrayList<>()));
-                }
-            }
+
             SRSCommand root = new SRSCommand(workingSet, completedSet, itemRepository, archiveRepository, groupRepository);
             int exitCode = new CommandLine(root).execute(args);
             itemRepository.close();

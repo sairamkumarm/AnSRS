@@ -87,7 +87,6 @@ class SRSCommandTest {
     void testSetFlagWithoutListFailsValidation() {
         int exitCode = cmdLine.execute("--set");
         assertEquals(2, exitCode);
-        verifyNoInteractions(workingSet, completedSet);
     }
 
     @Test

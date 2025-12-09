@@ -5,6 +5,7 @@ import ansrs.db.ItemRepository;
 import ansrs.util.Log;
 import ansrs.util.Printer;
 import ansrs.service.RecallService;
+import ansrs.util.VersionProvider;
 import picocli.CommandLine.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +13,8 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 @Command(name = "recall",
-        description = "Loads items from database or custom items into WorkingSet for recall",
-        mixinStandardHelpOptions = true)
+        header = "Loads items from database into WorkingSet for recall",
+        mixinStandardHelpOptions = true, versionProvider = VersionProvider.class)
 public class RecallCommand implements Callable<Integer> {
 
     @ParentCommand

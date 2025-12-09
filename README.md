@@ -2,27 +2,25 @@
 
 ```
                                                     
-  $$$$$$\             $$$$$$\  $$$$$$$\   $$$$$$\   
- $$  __$$\           $$  __$$\ $$  __$$\ $$  __$$\  
- $$ |  $$ |$$$$$$$\  $$ |  \__|$$ |  $$ |$$ |  \__| 
- $$$$$$$$ |$$  __$$\ \$$$$$$\  $$$$$$$  |\$$$$$$\   
- $$  __$$ |$$ |  $$ | \____$$\ $$  __$$<  \____$$\  
- $$ |  $$ |$$ |  $$ |$$\   $$ |$$ |  $$ |$$\   $$ | 
- $$ |  $$ |$$ |  $$ |\$$$$$$  |$$ |  $$ |\$$$$$$  | 
+  ██████\             ██████\  ███████\   ██████\   
+ ██  __██\           ██  __██\ ██  __██\ ██  __██\  
+ ██ |  ██ |███████\  ██ |  \__|██ |  ██ |██ |  \__| 
+ ████████ |██  __██\ \██████\  ███████  |\██████\   
+ ██  __██ |██ |  ██ | \____██\ ██  __██<  \____██\  
+ ██ |  ██ |██ |  ██ |██\   ██ |██ |  ██ |██\   ██ | 
+ ██ |  ██ |██ |  ██ |\██████  |██ |  ██ |\██████  | 
  \__|  \__|\__|  \__| \______/ \__|  \__| \______/  
                                                     
  ANOTHER SPACED REPETITION SYSTEM          
- AnSRS Version 1.3.0-SNAPSHOT                 
+ AnSRS Version 1.3.0                 
                                                     
 Author: Sairamkumar M
 Email: sairamkumar.m@outlook.com
 Github: https://github.com/sairamkumarm/AnSRS
 
-AnSRS (Pronounced "Answers") is a spaced repetition system.
-ansrs is a command-line spaced repetition system designed for quick item tracking and recall
-scheduling. It uses a lightweight local database to manage three sets: working, completed,
-and recall. The system supports a jump-start feature that allows new users to begin recall
-sessions immediately using predefined items, bypassing the usual initialization delay.
+AnSRS (Pronounced "Ans-er-es") is a spaced repetition system, designed for quick item
+tracking and recall scheduling. It uses a lightweight local database and cache files to manage
+items. The system supports batch importing items, and grouping for quick recall sessions.
 
 There are 3 Store of data here.
 A WorkingSet, where Items set for recall during a session are stored.
@@ -52,15 +50,16 @@ Commands:
   rollback  Rolls back items from completed state to WorkingSet state
   import    Import a csv into the database.
   archive   Manage archive operations
+  group     Group management
 
 ========================================================
 Add Command
 
+Add new items into the item database or update an existing one
 Usage: ansrs add [-huV] [--last-recall=ITEM_LAST_RECALL] [--link=ITEM_LINK]
                  [--name=ITEM_NAME] [--pool=ITEM_POOL]
                  [--total-recalls=ITEM_TOTAL_RECALLS] ITEM_ID [ITEM_NAME]
                  [ITEM_LINK] [ITEM_POOL]
-Add new items into the item database or update an existing one
 Parameter Order: ITEM_ID ITEM_NAME ITEM_LINK ITEM_POOL
 [--last-recall=ITEM_RECALL_DATE] [--total-recalls=ITEM_TOTAL_RECALLS]
 To update, use the flag versions or name, link, pool, last_recall and
@@ -79,13 +78,14 @@ total_recalls
       --total-recalls=ITEM_TOTAL_RECALLS
                          Set custom total recall count
   -u, --update           Update an existing item
+  -V, --version          Print version information and exit.
 
 ========================================================
 Complete Command
 
+Transfer items from WorkingSet into the CompletedSet
 Usage: ansrs complete [-afhV] [--date=ITEM_LAST_RECALL] [--update=ITEM_POOL]
                       ITEM_ID
-Marks item as completed, and transfers them to the CompletedSet
       ITEM_ID              Unique identifier of an item
   -a, --all                Completes all items in the WorkingSet, but you lose
                              the ability to update item pools
@@ -97,14 +97,14 @@ Marks item as completed, and transfers them to the CompletedSet
   -h, --help               Show this help message and exit.
       --update=ITEM_POOL   Optional ITEM_POOL value updated for item, choose
                              from H M and L
+  -V, --version            Print version information and exit.
 
 ========================================================
 Delete Command
 
+Remove from WorkingSet, CompletedSet or Database
 Usage: ansrs delete [-cdhV] [--completed-all] [--hard-reset] --sure
                     [--working-all] ITEM_ID
-Remove from WorkingSet, CompletedSet and db, depending on the flags, by default
-it removes from WorkingSet
       ITEM_ID           Unique identifier of an item
   -c, --completed       Removes from items that are completed but, are yet to
                           be commited to the database.
@@ -113,45 +113,49 @@ it removes from WorkingSet
   -h, --help            Show this help message and exit.
       --hard-reset      Hard resets all the persistent data, sets included
       --sure            A defensive fallback to prevent accidental deletions
+  -V, --version         Print version information and exit.
       --working-all     Removes all items from WorkingSet
 
 ========================================================
 Commit Command
 
+Save items in CompletedSet to the database
 Usage: ansrs commit [-fhV]
-Save completed items in WorkingSet to the database
   -f, --force     allows you to commit when there are pending items in the
                     WorkingSet
   -h, --help      Show this help message and exit.
+  -V, --version   Print version information and exit.
 
 ========================================================
 Recall Command
 
-Usage: ansrs recall [-afhV] [-c=ITEM_ID[,ITEM_ID...]...]... RECALL_COUNT
-Loads items from database or custom items into WorkingSet for recall
+Loads items from database into WorkingSet for recall
+Usage: ansrs recall [-ahoV] [-c=ITEM_ID[,ITEM_ID...]...]... RECALL_COUNT
       RECALL_COUNT   The amount of items to load into WorkingSet for recall
   -a, --append       Append to an existing non empty WorkingSet, only unique
                        items are added
   -c, --custom=ITEM_ID[,ITEM_ID...]...
                      Custom ITEM_ID(s) to recall, use space or comma separated
                        values
-  -o, --overwrite    Overwrite existing non-empty WorkingSet
   -h, --help         Show this help message and exit.
+  -o, --overwrite    Overwrite existing non-empty WorkingSet
+  -V, --version      Print version information and exit.
 
 ========================================================
 Rollback Command
 
+Roll back items from CompletedSet to WorkingSet
 Usage: ansrs rollback [-ahV] ITEM_ID
-Rolls back items from completed state to WorkingSet state
       ITEM_ID     Unique identifier of an item
   -a, --all       Rollback all items from WorkingSet
   -h, --help      Show this help message and exit.
+  -V, --version   Print version information and exit.
 
 ========================================================
 Import Command
 
-Usage: ansrs import [-hV] --path=CSV_FILE_PATH --preserve=PRESERVE_SOURCE
-Import a csv into the database.
+Import a batch of items in csv form into the database.
+Usage: ansrs import [-hV] --path=CSV_FILE_PATH --preserve=PRESERVE_OPTION
 The following format is mandatory.
 Header(Optional)
 (ITEM_ID, ITEM_NAME, ITEM_LINK, ITEM_POOL, ITEM_LAST_RECALL, totalRecalls)
@@ -165,18 +169,19 @@ ITEM_TOTAL_RECALLS: Integer >= 0
 
   -h, --help                 Show this help message and exit.
       --path=CSV_FILE_PATH   Path to the csv file
-      --preserve=PRESERVE_SOURCE
-                             [csv/db] Pick between overwriting csv values in db
-                               or preserving db values in the even of duplicate
-                               ITEM_IDs.
+      --preserve=PRESERVE_OPTION
+                             ["csv"/"db"] Pick between overwriting csv values
+                               in db or preserving db values in the even of
+                               duplicate ITEM_IDs.
+  -V, --version              Print version information and exit.
 
 ========================================================
 Archive Command
 
+Manage operations for items in archive
 Usage: ansrs archive [-hV] [--all] [--list] [--restore-all] [--sure]
                      [--add=ITEM_ID] [--delete=ITEM_ID] [--id=ITEM_ID]
                      [--name=ITEM_NAME_QUERY] [--restore=ITEM_ID]
-Manage archive operations
       --add=ITEM_ID       Move ITEM_ID from DB to archive
       --all               Archive all items from DB (excluding those in sets)
       --delete=ITEM_ID    Delete ITEM_ID from archive
@@ -189,6 +194,37 @@ Manage archive operations
       --restore-all       Restore all items from archive to DB
       --sure              Confirm destructive operation for --delete, --all,
                             and --restore-all
+  -V, --version           Print version information and exit.
+
+========================================================
+Group Command
+
+Manage groups, and the items in groups
+Usage: ansrs group [-hV] [--create] [--delete] [--show] [--show-all]
+                   [--show-items] [--update] [--add-item=ITEM_ID]
+                   [--id=GROUP_ID] [--link=GROUP_LINK] [--name=GROUP_NAME]
+                   [--remove-item=ITEM_ID] [--add-batch=ITEM_IDS[,
+                   ITEM_IDS...]]...
+Manage items groups, for quick loading into WorkingSet for recall
+NOTE: destructive actions are not carried onto the items themselves
+      --add-batch=ITEM_IDS[,ITEM_IDS...]
+
+      --add-item=ITEM_ID   Add an item into a group, requires --id=GROUPS_ID
+      --create             Create a new group
+      --delete             Delete a group (does not affect items in them)
+  -h, --help               Show this help message and exit.
+      --id=GROUP_ID        Target group id
+      --link=GROUP_LINK    Optional group link (https only)
+      --name=GROUP_NAME    Group name (required for create)
+      --remove-item=ITEM_ID
+                           remove an item from a specified group (does not
+                             affect the item itself)
+      --show               Show a group's metadata
+      --show-all           Show all groups in collection
+      --show-items         Show items in a specific group
+      --update             Update group name or link
+  -V, --version            Print version information and exit.
+
 
 ```
 ## Build steps

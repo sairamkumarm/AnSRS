@@ -186,6 +186,15 @@
       ]
     },
     {
+      "type": "ansrs.util.VersionProvider",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "com.fasterxml.jackson.databind.ext.Java7SupportImpl",
       "methods": [
         {
@@ -199,6 +208,15 @@
     },
     {
       "type": "groovy.lang.Closure"
+    },
+    {
+      "type": "java.io.Console",
+      "methods": [
+        {
+          "name": "isTerminal",
+          "parameterTypes": []
+        }
+      ]
     },
     {
       "type": "java.lang.Boolean",
@@ -220,6 +238,15 @@
     },
     {
       "type": "java.lang.String[]"
+    },
+    {
+      "type": "java.lang.System",
+      "methods": [
+        {
+          "name": "console",
+          "parameterTypes": []
+        }
+      ]
     },
     {
       "type": "java.nio.file.Path"
@@ -454,6 +481,9 @@
       "type": "org.flywaydb.core.internal.schemahistory.BaseAppliedMigration"
     },
     {
+      "type": "org.fusesource.jansi.Ansi"
+    },
+    {
       "type": "org.h2.Driver",
       "methods": [
         {
@@ -652,6 +682,18 @@
       ]
     },
     {
+      "type": "sun.text.resources.BreakIteratorInfo"
+    },
+    {
+      "type": "sun.text.resources.BreakIteratorResources"
+    },
+    {
+      "type": "sun.text.resources.BreakIteratorResources_en"
+    },
+    {
+      "type": "sun.text.resources.BreakIteratorResources_en_US"
+    },
+    {
       "type": "sun.text.resources.cldr.FormatData"
     },
     {
@@ -691,6 +733,10 @@
     },
     {
       "glob": "org/h2/util/data.zip"
+    },
+    {
+      "module": "java.base",
+      "glob": "sun/text/resources/LineBreakIteratorData"
     }
   ]
 }

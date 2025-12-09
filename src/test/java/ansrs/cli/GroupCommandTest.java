@@ -175,12 +175,32 @@ class GroupCommandTest {
         assertEquals(2, cmdLine.execute("--id", "8", "--add-batch", "1,2"));
     }
 
+    @Test
+    void testAddBatchWithDuplicates() {
+        when(gr.exists(8)).thenReturn(true);
+        when(ir.exists(anyInt())).thenReturn(true);
+
+        // Simulate duplicate check
+        when(gr.itemExistsInGroup(eq(8), eq(2))).thenReturn(true); // item 2 is already in group
+        when(gr.itemExistsInGroup(eq(8), eq(1))).thenReturn(false);
+        when(gr.itemExistsInGroup(eq(8), eq(3))).thenReturn(false);
+
+        when(gr.addItemsToGroupBatch(eq(8), argThat(list -> list.size() == 2 && list.contains(1) && list.contains(3))))
+                .thenReturn(true);
+
+        int result = cmdLine.execute("--id", "8", "--add-batch", "1,2,3");
+        assertEquals(0, result);
+
+        // verify batch add called with duplicates removed
+        verify(gr).addItemsToGroupBatch(eq(8), argThat(list -> list.size() == 2 && list.contains(1) && list.contains(3)));
+    }
     // ---------- REMOVE ITEM ----------
 
     @Test
     void testRemoveItemSuccess() {
         when(gr.exists(9)).thenReturn(true);
         when(ir.exists(55)).thenReturn(true);
+        when(gr.itemExistsInGroup(9, 55)).thenReturn(true);
         when(gr.removeItemFromGroup(9, 55)).thenReturn(true);
 
         assertEquals(0, cmdLine.execute("--id", "9", "--remove-item", "55"));
@@ -192,6 +212,14 @@ class GroupCommandTest {
         when(gr.exists(9)).thenReturn(true);
         when(ir.exists(55)).thenReturn(false);
 
+        assertEquals(2, cmdLine.execute("--id", "9", "--remove-item", "55"));
+    }
+
+    @Test
+    void testRemoveItemFailsIfItemMissingFromGroup() {
+        when(gr.exists(9)).thenReturn(true);
+        when(ir.exists(55)).thenReturn(true);
+        when(gr.itemExistsInGroup(9,55)).thenReturn(false);
         assertEquals(2, cmdLine.execute("--id", "9", "--remove-item", "55"));
     }
 

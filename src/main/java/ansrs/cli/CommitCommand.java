@@ -4,6 +4,7 @@ import ansrs.data.Item;
 import ansrs.set.CompletedSet;
 import ansrs.util.Log;
 import ansrs.util.Printer;
+import ansrs.util.VersionProvider;
 import picocli.CommandLine.*;
 
 import java.time.LocalDate;
@@ -13,8 +14,8 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 @Command(name = "commit",
-        description = "Save completed items in WorkingSet to the database",
-        mixinStandardHelpOptions = true)
+        header = "Save items in CompletedSet to the database",
+        mixinStandardHelpOptions = true, versionProvider = VersionProvider.class)
 public class CommitCommand implements Callable<Integer> {
 
     @Spec

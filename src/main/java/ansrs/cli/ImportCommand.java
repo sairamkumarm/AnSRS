@@ -3,6 +3,7 @@ package ansrs.cli;
 import ansrs.data.Item;
 import ansrs.util.Log;
 import ansrs.service.CSVImporter;
+import ansrs.util.VersionProvider;
 import picocli.CommandLine.*;
 
 import java.nio.file.Files;
@@ -13,7 +14,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 @Command(name = "import", description = """
-        Import a csv into the database.
         The following format is mandatory.
         Header(Optional)
         (ITEM_ID, ITEM_NAME, ITEM_LINK, ITEM_POOL, ITEM_LAST_RECALL, totalRecalls)
@@ -23,8 +23,8 @@ import java.util.concurrent.Callable;
         ITEM_POOL: Non-empty value belonging and limited to [H, M, L]
         ITEM_LAST_RECALL: Date string of format YYYY-MM-DD, or cannot be in the future, leave empty for today's date.
         ITEM_TOTAL_RECALLS: Integer >= 0
-        """,
-        mixinStandardHelpOptions = true)
+        """, header = "Import a batch of items in csv form into the database.",
+        mixinStandardHelpOptions = true, versionProvider = VersionProvider.class)
 public class ImportCommand implements Callable<Integer> {
 
     @Spec
@@ -36,7 +36,7 @@ public class ImportCommand implements Callable<Integer> {
     @Option(names = "--path", paramLabel = "CSV_FILE_PATH", description = "Path to the csv file", required = true)
     private String filePath;
 
-    @Option(names = "--preserve", paramLabel = "PRESERVE_SOURCE", description = "[csv/db] Pick between overwriting csv values in db or preserving db values in the even of duplicate ITEM_IDs.", required = true)
+    @Option(names = "--preserve", paramLabel = "PRESERVE_OPTION", description = "[\"csv\"/\"db\"] Pick between overwriting csv values in db or preserving db values in the even of duplicate ITEM_IDs.", required = true)
     private String overwrite;
 
     @Override

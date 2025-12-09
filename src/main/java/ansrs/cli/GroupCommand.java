@@ -5,6 +5,7 @@ import ansrs.db.GroupRepository;
 import ansrs.data.Item;
 import ansrs.util.Log;
 import ansrs.util.Printer;
+import ansrs.util.VersionProvider;
 import picocli.CommandLine.*;
 
 import java.util.ArrayList;
@@ -14,8 +15,9 @@ import java.util.concurrent.Callable;
 
 @Command(
         name = "group",
-        description = "Group management",
-        mixinStandardHelpOptions = true
+        header = "Manage groups, and the items in groups",
+        description = "Manage items groups, for quick loading into WorkingSet for recall \nNOTE: destructive actions are not carried onto the items themselves",
+        mixinStandardHelpOptions = true, versionProvider = VersionProvider.class
 )
 public class GroupCommand implements Callable<Integer> {
 
@@ -36,7 +38,7 @@ public class GroupCommand implements Callable<Integer> {
     @Option(names = "--name", paramLabel = "GROUP_NAME", description = "Group name (required for create)")
     private String name;
 
-    @Option(names = "--link", paramLabel = "GROUP_LINK", description = "Optional group link")
+    @Option(names = "--link", paramLabel = "GROUP_LINK", description = "Optional group link (https only)")
     private String link;
 
     // ===== UPDATE =====
@@ -44,31 +46,31 @@ public class GroupCommand implements Callable<Integer> {
     private boolean update;
 
     // ===== DELETE =====
-    @Option(names = "--delete", description = "Delete a group")
+    @Option(names = "--delete", description = "Delete a group (does not affect items in them)")
     private boolean delete;
 
     // ===== READ =====
-    @Option(names = "--show", description = "Show group metadata")
+    @Option(names = "--show", description = "Show a group's metadata")
     private boolean show;
 
-    @Option(names = "--show-all", description = "Show all groups")
+    @Option(names = "--show-all", description = "Show all groups in collection")
     private boolean showAll;
 
-    @Option(names = "--show-items", description = "Show items in group")
+    @Option(names = "--show-items", description = "Show items in a specific group")
     private boolean showItems;
 
     // ===== ITEM OPERATIONS =====
-    @Option(names = "--add-item", paramLabel = "ITEM_ID")
+    @Option(names = "--add-item", paramLabel = "ITEM_ID", description = "Add an item into a group, requires --id=GROUPS_ID")
     private Integer addItemId;
 
     @Option(
             names = "--add-batch",
             paramLabel = "ITEM_IDS",
-            split = ","
+            split = ",", arity = "1..*"
     )
     private List<Integer> batchItemIds = new ArrayList<>();
 
-    @Option(names = "--remove-item", paramLabel = "ITEM_ID")
+    @Option(names = "--remove-item", paramLabel = "ITEM_ID", description = "remove an item from a specified group (does not affect the item itself)")
     private Integer removeItemId;
 
     @Override
@@ -157,12 +159,28 @@ public class GroupCommand implements Callable<Integer> {
 
         // ===== ADD BATCH ITEMS =====
         if (!batchItemIds.isEmpty()) {
-            boolean ok = groupRepository.addItemsToGroupBatch(groupId, batchItemIds);
+            List<Integer> toAdd = new ArrayList<>();
+
+            for (Integer id : batchItemIds) {
+                if (parent.groupRepository.itemExistsInGroup(groupId, id)) {
+                    Log.warn("ITEM_ID[" + id + "] already exists in GROUP[" + groupId + "], skipping.");
+                } else {
+                    toAdd.add(id);
+                }
+            }
+
+            if (toAdd.isEmpty()) {
+                Log.warn("No new items to add to GROUP[" + groupId + "]");
+                return 0;
+            }
+
+            boolean ok = groupRepository.addItemsToGroupBatch(groupId, toAdd);
             if (!ok) {
                 Log.error("Batch add failed for GROUP[" + groupId + "]");
                 return 1;
             }
-            Log.info("Batch added " + batchItemIds.size() + " items to GROUP[" + groupId + "]");
+
+            Log.info("Batch added " + toAdd.size() + " items to GROUP[" + groupId + "]");
             return 0;
         }
 
@@ -268,12 +286,21 @@ public class GroupCommand implements Callable<Integer> {
             }
         }
 
-        if (removeItemId != null && !parent.itemRepository.exists(removeItemId)) {
-            throw new ParameterException(
-                    spec.commandLine(),
-                    Log.errorMsg("ITEM_ID[" + removeItemId + "] does not exist")
-            );
+        if (removeItemId != null) {
+            if (!parent.itemRepository.exists(removeItemId)) {
+                throw new ParameterException(
+                        spec.commandLine(),
+                        Log.errorMsg("ITEM_ID[" + removeItemId + "] does not exist")
+                );
+            }
+            if (!parent.groupRepository.itemExistsInGroup(groupId, removeItemId)) {
+                throw new ParameterException(
+                        spec.commandLine(),
+                        Log.errorMsg("ITEM_ID[" + removeItemId + "] does not exist in GROUP[" + groupId + "]")
+                );
+            }
         }
+
 
         for (Integer id : batchItemIds) {
             if (id == null || id <= 0 || !parent.itemRepository.exists(id)) {

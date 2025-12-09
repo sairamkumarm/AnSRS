@@ -101,15 +101,15 @@ public class GroupRepository implements AutoCloseable {
     }
 
     public Optional<List<Group>> findAll() {
-        List<Group> lists = new ArrayList<>();
+        List<Group> groups = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement("""
                 SELECT * FROM groups
         """)) {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                lists.add(mapRow(rs));
+                groups.add(mapRow(rs));
             }
-            return Optional.of(lists);
+            return Optional.of(groups);
         } catch (SQLException e) {
             Log.error(e.getMessage());
             return Optional.empty();
@@ -118,31 +118,31 @@ public class GroupRepository implements AutoCloseable {
 
     // ================= JOIN TABLE PROXIES =================
 
-    public boolean addItemToGroup(int listId, int itemId) {
-        return groupItemRepository.addItemToGroup(listId, itemId);
+    public boolean addItemToGroup(int groupId, int itemId) {
+        return groupItemRepository.addItemToGroup(groupId, itemId);
     }
 
-    public boolean addItemsToGroupBatch(int listId, List<Integer> itemIds) {
-        return groupItemRepository.addItemsToGroupBatch(listId, itemIds);
+    public boolean addItemsToGroupBatch(int groupId, List<Integer> itemIds) {
+        return groupItemRepository.addItemsToGroupBatch(groupId, itemIds);
     }
 
-    public boolean removeItemFromGroup(int listId, int itemId) {
-        return groupItemRepository.removeItemFromGroup(listId, itemId);
+    public boolean removeItemFromGroup(int groupId, int itemId) {
+        return groupItemRepository.removeItemFromGroup(groupId, itemId);
     }
 
-    public boolean removeAllItemsFromGroup(int listId) {
-        return groupItemRepository.removeAllItemsFromGroup(listId);
+    public boolean removeAllItemsFromGroup(int groupId) {
+        return groupItemRepository.removeAllItemsFromGroup(groupId);
     }
 
-    public boolean itemExistsInGroup(int listId, int itemId) {
-        return groupItemRepository.exists(listId, itemId);
+    public boolean itemExistsInGroup(int groupId, int itemId) {
+        return groupItemRepository.exists(groupId, itemId);
     }
 
-    public List<Integer> getItemIdsForGroup(int listId) {
-        return groupItemRepository.getItemIdsForGroup(listId);
+    public List<Integer> getItemIdsForGroup(int groupId) {
+        return groupItemRepository.getItemIdsForGroup(groupId);
     }
 
-    public List<Integer> getListIdsForGroup(int itemId) {
+    public List<Integer> getgroupIdsForGroup(int itemId) {
         return groupItemRepository.getGroupIdsForItem(itemId);
     }
 

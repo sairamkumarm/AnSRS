@@ -2,6 +2,7 @@ package ansrs.cli;
 
 import ansrs.data.Item;
 import ansrs.util.Log;
+import ansrs.util.VersionProvider;
 import picocli.CommandLine.*;
 
 import java.time.LocalDate;
@@ -10,11 +11,10 @@ import java.util.concurrent.Callable;
 
 @Command(name = "add",
         description = """
-                Add new items into the item database or update an existing one
                 Parameter Order: ITEM_ID ITEM_NAME ITEM_LINK ITEM_POOL [--last-recall=ITEM_RECALL_DATE] [--total-recalls=ITEM_TOTAL_RECALLS]
                 To update, use the flag versions or name, link, pool, last_recall and total_recalls
-                """,
-        mixinStandardHelpOptions = true)
+                """, header = "Add new items into the item database or update an existing one",
+        mixinStandardHelpOptions = true, versionProvider = VersionProvider.class)
 public class AddCommand implements Callable<Integer> {
 
     @Spec

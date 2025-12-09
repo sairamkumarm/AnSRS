@@ -5,13 +5,15 @@ import ansrs.set.CompletedSet;
 import ansrs.data.Item;
 import ansrs.util.Log;
 import ansrs.util.Printer;
+import ansrs.util.VersionProvider;
 import picocli.CommandLine.*;
 
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
 
-@Command(name = "rollback", description = "Rolls back items from completed state to WorkingSet state", mixinStandardHelpOptions = true)
+@Command(name = "rollback", header = "Roll back items from CompletedSet to WorkingSet",
+        mixinStandardHelpOptions = true, versionProvider = VersionProvider.class)
 public class RollbackCommand implements Callable<Integer> {
 
     @Spec

@@ -2,6 +2,7 @@ package ansrs.cli;
 
 import ansrs.data.Item;
 import ansrs.util.Log;
+import ansrs.util.VersionProvider;
 import picocli.CommandLine.*;
 
 import java.time.LocalDate;
@@ -11,8 +12,8 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 @Command(name = "complete",
-        description = "Marks item as completed, and transfers them to the CompletedSet",
-        mixinStandardHelpOptions = true)
+        header = "Transfer items from WorkingSet into the CompletedSet",
+        mixinStandardHelpOptions = true, versionProvider = VersionProvider.class)
 public class CompleteCommand implements Callable<Integer> {
 
     @ParentCommand

@@ -5,6 +5,7 @@ import ansrs.db.ItemRepository;
 import ansrs.db.ArchiveRepository;
 import ansrs.util.Log;
 import ansrs.util.Printer;
+import ansrs.util.VersionProvider;
 import picocli.CommandLine.*;
 
 import java.util.*;
@@ -12,8 +13,8 @@ import java.util.concurrent.Callable;
 
 @Command(
         name = "archive",
-        description = "Manage archive operations",
-        mixinStandardHelpOptions = true
+        header = "Manage operations for items in archive",
+        mixinStandardHelpOptions = true, versionProvider = VersionProvider.class
 )
 public class ArchiveCommand implements Callable<Integer> {
 

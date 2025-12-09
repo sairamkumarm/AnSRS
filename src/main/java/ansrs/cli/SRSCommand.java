@@ -5,17 +5,18 @@ import ansrs.db.GroupRepository;
 import ansrs.set.WorkingSet;
 import ansrs.set.CompletedSet;
 import ansrs.db.ItemRepository;
+import ansrs.util.Banner;
 import ansrs.util.Log;
 import ansrs.util.Printer;
+import ansrs.util.VersionProvider;
+import picocli.CommandLine;
 import picocli.CommandLine.*;
 
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
 @Command(name = "ansrs",
-        description = "AnSRS (Pronounced \"Answers\") is a spaced repetition system.", version = """
-        AnSRS version 1.3.0-SNAPSHOT
-        """,
+        description = "AnSRS (Pronounced \"Answers\") is a spaced repetition system.", versionProvider = VersionProvider.class,
         mixinStandardHelpOptions = true,
         subcommands = {AddCommand.class, CompleteCommand.class, DeleteCommand.class, CommitCommand.class,
                 RecallCommand.class, RollbackCommand.class, ImportCommand.class, ArchiveCommand.class,
@@ -52,6 +53,7 @@ public class SRSCommand implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        startMessage();
         validate();
         if (itemId != -12341234) {
             System.out.println("Item:");
@@ -84,5 +86,16 @@ public class SRSCommand implements Callable<Integer> {
         }
         if (set && !list)
             throw new ParameterException(spec.commandLine(), Log.errorMsg("--set is to be used along with --list, to display only Set statuses"));
+    }
+
+    private void startMessage(){
+        if(!list && !set && itemId == -12341234 && itemName.equals("zyxwvutsrqp") && workingSet.getItemIdSet().isEmpty()){
+            Banner.colorrizedBanner(VersionProvider.getVersionString());
+            Banner.initMessage();
+            System.out.println(spec.commandLine().getUsageMessage());
+        } else {
+            System.out.println("Current WorkingSet:");
+            Printer.printItemsList(itemRepository.getItemsFromList(workingSet.getItemIdList()).orElse(new ArrayList<>()));
+        }
     }
 }
