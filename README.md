@@ -12,7 +12,7 @@
  \__|  \__|\__|  \__| \______/ \__|  \__| \______/  
                                                     
  ANOTHER SPACED REPETITION SYSTEM          
- AnSRS Version 1.3.0                 
+ AnSRS Version 1.3.1                 
                                                     
 Author: Sairamkumar M
 Email: sairamkumar.m@outlook.com
@@ -199,32 +199,33 @@ Usage: ansrs archive [-hV] [--all] [--list] [--restore-all] [--sure]
 ========================================================
 Group Command
 
-Manage groups, and the items in groups
+Manage groups, items in groups, and recall from group
 Usage: ansrs group [-hV] [--create] [--delete] [--show] [--show-all]
                    [--show-items] [--update] [--add-item=ITEM_ID]
                    [--id=GROUP_ID] [--link=GROUP_LINK] [--name=GROUP_NAME]
-                   [--remove-item=ITEM_ID] [--add-batch=ITEM_IDS[,
-                   ITEM_IDS...]]...
+                   [--recall=RECALL_MODE] [--remove-item=ITEM_ID]
+                   [--add-batch=ITEM_IDS[,ITEM_IDS...]...]...
 Manage items groups, for quick loading into WorkingSet for recall
 NOTE: destructive actions are not carried onto the items themselves
-      --add-batch=ITEM_IDS[,ITEM_IDS...]
-
-      --add-item=ITEM_ID   Add an item into a group, requires --id=GROUPS_ID
-      --create             Create a new group
-      --delete             Delete a group (does not affect items in them)
-  -h, --help               Show this help message and exit.
-      --id=GROUP_ID        Target group id
-      --link=GROUP_LINK    Optional group link (https only)
-      --name=GROUP_NAME    Group name (required for create)
-      --remove-item=ITEM_ID
-                           remove an item from a specified group (does not
-                             affect the item itself)
-      --show               Show a group's metadata
-      --show-all           Show all groups in collection
-      --show-items         Show items in a specific group
-      --update             Update group name or link
-  -V, --version            Print version information and exit.
-
+      --add-batch=ITEM_IDS[,ITEM_IDS...]...
+                             Add items in space separated or comma separated
+                               fashion
+      --add-item=ITEM_ID     Add an item into a group, requires --id=GROUPS_ID
+      --create               Create a new group
+      --delete               Delete a group (does not affect items in them)
+  -h, --help                 Show this help message and exit.
+      --id=GROUP_ID          Target group id
+      --link=GROUP_LINK      Optional group link (https only)
+      --name=GROUP_NAME      Group name (required for create)
+      --recall=RECALL_MODE   Add group items to WorkingSet with mode
+                               "overwrite" | "append"
+      --remove-item=ITEM_ID  Remove an item from a specified group (does not
+                               affect the item itself)
+      --show                 Show a group's metadata
+      --show-all             Show all groups in collection
+      --show-items           Show items in a specific group
+      --update               Update group name or link
+  -V, --version              Print version information and exit.
 
 ```
 ## Build steps

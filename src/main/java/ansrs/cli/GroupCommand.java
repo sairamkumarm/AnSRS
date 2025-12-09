@@ -3,6 +3,7 @@ package ansrs.cli;
 import ansrs.data.Group;
 import ansrs.db.GroupRepository;
 import ansrs.data.Item;
+import ansrs.set.WorkingSet;
 import ansrs.util.Log;
 import ansrs.util.Printer;
 import ansrs.util.VersionProvider;
@@ -15,7 +16,7 @@ import java.util.concurrent.Callable;
 
 @Command(
         name = "group",
-        header = "Manage groups, and the items in groups",
+        header = "Manage groups, items in groups, and recall from group",
         description = "Manage items groups, for quick loading into WorkingSet for recall \nNOTE: destructive actions are not carried onto the items themselves",
         mixinStandardHelpOptions = true, versionProvider = VersionProvider.class
 )
@@ -65,20 +66,23 @@ public class GroupCommand implements Callable<Integer> {
 
     @Option(
             names = "--add-batch",
-            paramLabel = "ITEM_IDS",
+            paramLabel = "ITEM_IDS", description = "Add items in space separated or comma separated fashion",
             split = ",", arity = "1..*"
     )
     private List<Integer> batchItemIds = new ArrayList<>();
 
-    @Option(names = "--remove-item", paramLabel = "ITEM_ID", description = "remove an item from a specified group (does not affect the item itself)")
+    @Option(names = "--remove-item", paramLabel = "ITEM_ID", description = "Remove an item from a specified group (does not affect the item itself)")
     private Integer removeItemId;
+
+    @Option(names = "--recall", paramLabel = "RECALL_MODE", description = "Add group items to WorkingSet with mode \"overwrite\" | \"append\"")
+    private String recall;
 
     @Override
     public Integer call() {
         validate();
 
         GroupRepository groupRepository = parent.groupRepository;
-
+        WorkingSet workingSet = parent.workingSet;
         // ===== CREATE =====
         if (create) {
             boolean ok = groupRepository.createGroup(groupId, name, link);
@@ -195,6 +199,28 @@ public class GroupCommand implements Callable<Integer> {
             return 0;
         }
 
+        // ===== RECALL GROUP =====
+        if (recall != null && !recall.isBlank()) {
+            List<Integer> itemIdsForGroup = groupRepository.getItemIdsForGroup(groupId);
+            if (itemIdsForGroup.isEmpty()){
+                Log.warn("GROUP["+groupId+"] empty, nothing to recall");
+                return 0;
+            }
+            if (recall.equals("overwrite")){
+                if (!workingSet.clearSet()){
+                    Log.error("WorkingSet overwrite failed");
+                    return 1;
+                } else {
+                    Log.info("WorkingSet overwritten");
+                }
+            } else if(recall.equals("append")){
+                Log.info("WorkingSet appended");
+            }
+            workingSet.fillSet(itemIdsForGroup);
+            Log.info("GROUP["+groupId+"] items added to WorkingSet");
+            return 0;
+        }
+
         throw new ParameterException(spec.commandLine(), Log.errorMsg("No operation specified"));
     }
 
@@ -208,6 +234,7 @@ public class GroupCommand implements Callable<Integer> {
         if (show) opCount++;
         if (showItems) opCount++;
         if (showAll) opCount++;
+        if (recall != null) opCount++;
         if (addItemId != null) opCount++;
         if (!batchItemIds.isEmpty()) opCount++;
         if (removeItemId != null) opCount++;
@@ -307,6 +334,15 @@ public class GroupCommand implements Callable<Integer> {
                 throw new ParameterException(
                         spec.commandLine(),
                         Log.errorMsg("Invalid ITEM_ID in batch: " + id)
+                );
+            }
+        }
+
+        if (recall!=null){
+            if (recall.isBlank() || (!recall.equals("overwrite") && !recall.equals("append"))){
+                throw new ParameterException(
+                        spec.commandLine(),
+                        Log.errorMsg("Invalid RECALL_MODE, it must be either \"overwrite\" | \"append\"")
                 );
             }
         }
