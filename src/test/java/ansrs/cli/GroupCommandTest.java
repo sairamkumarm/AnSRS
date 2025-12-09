@@ -4,10 +4,12 @@ import ansrs.data.Group;
 import ansrs.data.Item;
 import ansrs.db.GroupRepository;
 import ansrs.db.ItemRepository;
+import ansrs.set.WorkingSet;
 import ansrs.util.Printer;
 import org.junit.jupiter.api.*;
 import picocli.CommandLine;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,13 +24,14 @@ class GroupCommandTest {
     private SRSCommand parent;
     private GroupCommand cmd;
     private CommandLine cmdLine;
+    private WorkingSet ws;
 
     @BeforeEach
     void setup() {
         gr = mock(GroupRepository.class);
         ir = mock(ItemRepository.class);
-
-        parent = new SRSCommand(null, null, ir, null, gr);
+        ws = mock(WorkingSet.class);
+        parent = new SRSCommand(ws, null, ir, null, gr);
         cmd = new GroupCommand();
         cmdLine = new CommandLine(cmd);
         cmd.parent = parent;
@@ -223,6 +226,65 @@ class GroupCommandTest {
         assertEquals(2, cmdLine.execute("--id", "9", "--remove-item", "55"));
     }
 
+    // ---------- RECALL GROUP ----------
+    @Test
+    void testRecallOverwriteSuccess() {
+        when(gr.exists(10)).thenReturn(true);
+        when(gr.getItemIdsForGroup(10)).thenReturn(List.of(1, 2, 3));
+
+        when(ws.clearSet()).thenReturn(true);
+
+        int rc = cmdLine.execute("--id", "10", "--recall", "overwrite");
+        assertEquals(0, rc);
+
+        verify(ws).clearSet();
+        verify(ws).fillSet(List.of(1, 2, 3));
+    }
+
+    @Test
+    void testRecallAppendSuccess() {
+        when(gr.exists(11)).thenReturn(true);
+        when(gr.getItemIdsForGroup(11)).thenReturn(List.of(5, 6));
+
+        int rc = cmdLine.execute("--id", "11", "--recall", "append");
+        assertEquals(0, rc);
+
+        verify(ws, never()).clearSet();
+        verify(ws).fillSet(List.of(5, 6));
+    }
+
+    @Test
+    void testRecallInvalidModeFails() {
+        when(gr.exists(12)).thenReturn(true);
+
+        assertEquals(2, cmdLine.execute("--id", "12", "--recall", "badmode"));
+    }
+
+    @Test
+    void testRecallOverwriteClearFails() {
+        when(gr.exists(13)).thenReturn(true);
+        when(gr.getItemIdsForGroup(13)).thenReturn(List.of(9));
+
+        when(ws.clearSet()).thenReturn(false);
+
+        int rc = cmdLine.execute("--id", "13", "--recall", "overwrite");
+        assertEquals(1, rc);
+
+        verify(ws, never()).fillSet(List.of(9));
+    }
+
+    @Test
+    void testRecallEmptyGroupWarns() {
+        when(gr.exists(13)).thenReturn(true);
+        when(gr.getItemIdsForGroup(13)).thenReturn(Collections.emptyList());
+
+        int rc = cmdLine.execute("--id", "13", "--recall", "overwrite");
+        assertEquals(0, rc);
+
+        verify(ws, never()).fillSet(Collections.emptyList());
+    }
+
+
     // ---------- GENERIC VALIDATION ----------
 
     @Test
@@ -246,4 +308,33 @@ class GroupCommandTest {
         when(gr.exists(999)).thenReturn(false);
         assertEquals(2, cmdLine.execute("--delete", "--id", "999"));
     }
+
+    @Test
+    void testMissingIdFailsForNonCreate() {
+        assertEquals(2, cmdLine.execute("--show"));
+    }
+
+    @Test
+    void testMultipleOpsFails() {
+        assertEquals(2, cmdLine.execute("--show", "--delete", "--id", "3"));
+    }
+
+    @Test
+    void testNoOperationSpecified() {
+        when(gr.exists(4)).thenReturn(true);
+        assertEquals(2, cmdLine.execute("--id", "4"));
+    }
+
+    @Test
+    void testUpdateInvalidLinkFails() {
+        when(gr.exists(2)).thenReturn(true);
+        assertEquals(2, cmdLine.execute("--update", "--id", "2", "--link", "http://bad"));
+    }
+
+    @Test
+    void testShowItemsFailsIfGroupMissing() {
+        when(gr.exists(99)).thenReturn(false);
+        assertEquals(2, cmdLine.execute("--show-items", "--id", "99"));
+    }
+
 }

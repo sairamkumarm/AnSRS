@@ -6,7 +6,9 @@ import ansrs.db.GroupRepository;
 import ansrs.db.ItemRepository;
 import ansrs.set.CompletedSet;
 import ansrs.set.WorkingSet;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
 import java.nio.file.Files;
